@@ -1,0 +1,1922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f1c33" />
+  <title>AP US Gov · The Constitutional Reader</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,800;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    html, body { margin: 0; padding: 0; }
+    body { background-color: #f5efe1; font-family: 'Inter', system-ui, sans-serif; }
+    #loading {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; font-family: 'Fraunces', serif;
+      font-size: 1.5rem; font-style: italic; color: #0f1c33;
+    }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <div id="loading">Opening the Constitution…</div>
+  </div>
+
+  <!-- React (UMD) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Lucide icons (vanilla) -->
+  <script src="https://unpkg.com/lucide@0.469.0"></script>
+  <!-- Babel standalone for in-browser JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel" data-presets="react">
+    const { useState, useEffect, useMemo, useRef } = React;
+
+    // ===== Icon helper (uses lucide vanilla) =====
+    function Icon({ name, size = 16, fill = "none", strokeWidth = 2, ...rest }) {
+      const data = window.lucide && window.lucide.icons && window.lucide.icons[name];
+      if (!data) return null;
+      const children = data[2] || [];
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width={size}
+          height={size}
+          viewBox="0 0 24 24"
+          fill={fill}
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          {...rest}
+        >
+          {children.map((child, i) => {
+            const [tag, attrs] = child;
+            const reactAttrs = {};
+            for (const k in attrs) {
+              const camel = k.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+              reactAttrs[camel] = attrs[k];
+            }
+            return React.createElement(tag, { key: i, ...reactAttrs });
+          })}
+        </svg>
+      );
+    }
+    const Scale = (p) => <Icon name="scale" {...p} />;
+    const FileText = (p) => <Icon name="file-text" {...p} />;
+    const Brain = (p) => <Icon name="brain" {...p} />;
+    const HomeIcon = (p) => <Icon name="house" {...p} />;
+    const BookOpen = (p) => <Icon name="book-open" {...p} />;
+    const ChevronLeft = (p) => <Icon name="chevron-left" {...p} />;
+    const ChevronRight = (p) => <Icon name="chevron-right" {...p} />;
+    const Check = (p) => <Icon name="check" {...p} />;
+    const XIcon = (p) => <Icon name="x" {...p} />;
+    const RotateCcw = (p) => <Icon name="rotate-ccw" {...p} />;
+    const Flame = (p) => <Icon name="flame" {...p} />;
+    const ArrowRight = (p) => <Icon name="arrow-right" {...p} />;
+    const Sparkles = (p) => <Icon name="sparkles" {...p} />;
+    const Shuffle = (p) => <Icon name="shuffle" {...p} />;
+    const Eye = (p) => <Icon name="eye" {...p} />;
+    const EyeOff = (p) => <Icon name="eye-off" {...p} />;
+    const Zap = (p) => <Icon name="zap" {...p} />;
+    const Heart = (p) => <Icon name="heart" {...p} />;
+    const Trophy = (p) => <Icon name="trophy" {...p} />;
+    const Swords = (p) => <Icon name="swords" {...p} />;
+    const PenLine = (p) => <Icon name="pen-line" {...p} />;
+    const Target = (p) => <Icon name="target" {...p} />;
+    const Crown = (p) => <Icon name="crown" {...p} />;
+    const Skull = (p) => <Icon name="skull" {...p} />;
+
+    // =========================================================
+    // REQUIRED SCOTUS CASES (15)
+    // =========================================================
+    const CASES = [
+      { id: 'marbury', name: 'Marbury v. Madison', year: 1803, unit: 2, amendments: ['Article III'],
+        facts: 'William Marbury was appointed justice of the peace by outgoing President Adams, but his commission was never delivered. He sued Secretary of State Madison directly in the Supreme Court for a writ of mandamus.',
+        ruling: 'Unanimous. Section 13 of the Judiciary Act of 1789 was unconstitutional. The Court could not issue the writ.',
+        significance: 'Established JUDICIAL REVIEW — the Court can strike down laws that violate the Constitution.' },
+      { id: 'mcculloch', name: 'McCulloch v. Maryland', year: 1819, unit: 2, amendments: ['Necessary & Proper', 'Supremacy Clause'],
+        facts: 'Maryland tried to tax the Second Bank of the United States. James McCulloch, a bank cashier, refused to pay.',
+        ruling: 'Unanimous. Congress can charter a bank under the Necessary and Proper Clause; states cannot tax federal institutions.',
+        significance: 'Confirmed IMPLIED POWERS of Congress and federal SUPREMACY. Major expansion of federal power.' },
+      { id: 'schenck', name: 'Schenck v. United States', year: 1919, unit: 3, amendments: ['1st Amendment'],
+        facts: 'Charles Schenck distributed leaflets urging draft resistance during WWI. He was charged under the Espionage Act.',
+        ruling: 'Unanimous. Speech that creates a "clear and present danger" is not protected.',
+        significance: '1st Amendment protections are NOT absolute. Established the "clear and present danger" test.' },
+      { id: 'brown', name: 'Brown v. Board of Education', year: 1954, unit: 3, amendments: ['14th — Equal Protection'],
+        facts: 'Linda Brown, a Black student, was denied admission to a white school in Topeka. The NAACP challenged segregation.',
+        ruling: 'Unanimous. "Separate educational facilities are inherently unequal." Overturned Plessy v. Ferguson.',
+        significance: 'Ended de jure school segregation. Major civil rights victory.' },
+      { id: 'baker', name: 'Baker v. Carr', year: 1961, unit: 5, amendments: ['14th — Equal Protection'],
+        facts: 'Tennessee had not redrawn legislative districts since 1901, despite huge population shifts.',
+        ruling: '6-2. Redistricting questions ARE justiciable under the Equal Protection Clause.',
+        significance: 'Opened the door to "ONE PERSON, ONE VOTE." Federal courts can review state redistricting.' },
+      { id: 'engel', name: 'Engel v. Vitale', year: 1962, unit: 3, amendments: ['1st — Establishment'],
+        facts: 'New York public schools required students to recite a state-composed prayer each morning.',
+        ruling: '6-1. State-sponsored prayer in public schools violates the Establishment Clause.',
+        significance: 'Strict separation of church and state in public schools.' },
+      { id: 'gideon', name: 'Gideon v. Wainwright', year: 1963, unit: 3, amendments: ['6th + 14th'],
+        facts: 'Clarence Earl Gideon, charged with felony breaking and entering, could not afford a lawyer; Florida refused to appoint one.',
+        ruling: 'Unanimous. The 6th Amendment right to counsel applies to state felony cases via the 14th.',
+        significance: 'INCORPORATED the right to counsel. States must provide attorneys to indigent felony defendants.' },
+      { id: 'tinker', name: 'Tinker v. Des Moines', year: 1969, unit: 3, amendments: ['1st Amendment'],
+        facts: 'Students wore black armbands to school to protest the Vietnam War; the school suspended them.',
+        ruling: '7-2. Students do not "shed their constitutional rights at the schoolhouse gate."',
+        significance: 'Affirmed SYMBOLIC SPEECH and student 1st Amendment rights in public schools.' },
+      { id: 'nyt', name: 'New York Times Co. v. United States', year: 1971, unit: 3, amendments: ['1st — Free Press'],
+        facts: 'The Nixon administration tried to block publication of the Pentagon Papers, citing national security.',
+        ruling: '6-3. The government had not met the heavy burden required to justify prior restraint.',
+        significance: 'Strong protection against PRIOR RESTRAINT. Affirmed press freedom.' },
+      { id: 'yoder', name: 'Wisconsin v. Yoder', year: 1972, unit: 3, amendments: ['1st — Free Exercise'],
+        facts: 'Wisconsin required school attendance until 16. Amish parents refused past 8th grade on religious grounds.',
+        ruling: '7-0. The compulsory attendance law violated the Free Exercise Clause as applied to the Amish.',
+        significance: 'Free Exercise can override generally applicable laws when religious practice is sincerely burdened.' },
+      { id: 'roe', name: 'Roe v. Wade', year: 1973, unit: 3, amendments: ['14th — Due Process / Privacy'],
+        facts: '"Jane Roe" challenged a Texas law banning abortion except to save the mother\'s life.',
+        ruling: '7-2. The 14th Amendment includes a right to privacy that protects abortion access.',
+        significance: 'Established constitutional right to abortion via privacy. NOTE: Overturned by Dobbs (2022) but remains a required AP case for studying incorporation and judicial reasoning.' },
+      { id: 'shaw', name: 'Shaw v. Reno', year: 1993, unit: 5, amendments: ['14th — Equal Protection'],
+        facts: 'North Carolina drew an oddly-shaped majority-Black congressional district; white voters challenged it.',
+        ruling: '5-4. Race-predominant districts must survive strict scrutiny under Equal Protection.',
+        significance: 'Limited RACIAL GERRYMANDERING. Race cannot be the predominant factor in drawing district lines.' },
+      { id: 'lopez', name: 'United States v. Lopez', year: 1995, unit: 2, amendments: ['Commerce Clause'],
+        facts: 'Alfonso Lopez brought a gun to his Texas high school; charged under the federal Gun-Free School Zones Act.',
+        ruling: '5-4. The Act exceeded Congress\'s Commerce Clause power. Carrying a gun in a school zone is not economic.',
+        significance: 'First case in 60+ years to LIMIT the Commerce Clause. Reasserted federalism.' },
+      { id: 'mcdonald', name: 'McDonald v. Chicago', year: 2010, unit: 3, amendments: ['2nd + 14th'],
+        facts: 'Chicago effectively banned handguns. Otis McDonald sued, citing DC v. Heller.',
+        ruling: '5-4. The 2nd Amendment is INCORPORATED to the states via the 14th Amendment.',
+        significance: 'Selectively incorporated the right to bear arms.' },
+      { id: 'citizens', name: 'Citizens United v. FEC', year: 2010, unit: 5, amendments: ['1st Amendment'],
+        facts: 'Citizens United wanted to air a film critical of Hillary Clinton during the 2008 primary; federal law banned independent corporate expenditures.',
+        ruling: '5-4. Independent political spending by corporations and unions is protected speech.',
+        significance: 'Opened the door to SUPER PACs and unlimited independent campaign spending.' },
+    ];
+
+    // =========================================================
+    // REQUIRED FOUNDATIONAL DOCUMENTS (9)
+    // =========================================================
+    const DOCS = [
+      { id: 'doi', name: 'Declaration of Independence', author: 'Thomas Jefferson', year: 1776, unit: 1,
+        summary: 'Formal break from Britain. Lists grievances against King George III and asserts independence.',
+        keyIdeas: ['Natural rights — life, liberty, pursuit of happiness', 'Government derives power from CONSENT OF THE GOVERNED', 'People may alter or abolish tyrannical government', 'Influenced by Locke\'s social contract theory'],
+        significance: 'Philosophical foundation of American democracy. Legitimate government rests on popular sovereignty.' },
+      { id: 'aoc', name: 'Articles of Confederation', author: 'Continental Congress', year: 1781, unit: 1,
+        summary: 'First U.S. constitution. Created a weak central government with most power held by states.',
+        keyIdeas: ['Unicameral Congress, one vote per state', 'No power to tax or regulate commerce', 'No executive branch or national judiciary', '9/13 states needed to pass laws; unanimous consent to amend'],
+        significance: 'Failed because central government was too weak. Shays\' Rebellion exposed it. Led to the Constitutional Convention.' },
+      { id: 'constitution', name: 'U.S. Constitution', author: 'Framers', year: 1787, unit: 1,
+        summary: 'Replaced the Articles. Stronger federal government with separation of powers and federalism.',
+        keyIdeas: ['Separation of powers', 'Checks and balances', 'Federalism', 'Bill of Rights added 1791'],
+        significance: 'Supreme law of the land. Framework all federal/state action must follow.' },
+      { id: 'fed10', name: 'Federalist No. 10', author: 'James Madison', year: 1787, unit: 1,
+        summary: 'Argues a large republic is the best defense against the dangers of FACTION.',
+        keyIdeas: ['Factions are inevitable in a free society', 'Control effects, not causes (which would destroy liberty)', 'Large republic dilutes faction power — many competing interests', 'Pluralist defense of representative democracy'],
+        significance: 'Foundation of PLURALISM. Defends a large national government against critics fearing minority oppression.' },
+      { id: 'fed51', name: 'Federalist No. 51', author: 'James Madison', year: 1788, unit: 1,
+        summary: 'Defends separation of powers and checks and balances.',
+        keyIdeas: ['"If men were angels, no government would be necessary"', 'Each branch must have means and motive to resist encroachment', '"Ambition must be made to counteract ambition"', 'Double security: federalism + separation of powers'],
+        significance: 'Classic statement of CHECKS AND BALANCES.' },
+      { id: 'fed70', name: 'Federalist No. 70', author: 'Alexander Hamilton', year: 1788, unit: 2,
+        summary: 'Argues for a SINGLE, energetic executive.',
+        keyIdeas: ['"Energy in the executive is a leading character in the definition of good government"', 'Unity, duration, support, competent powers', 'Single executive ensures accountability', 'Plural executives produce conflict and diffuse responsibility'],
+        significance: 'Justifies the unitary executive design.' },
+      { id: 'fed78', name: 'Federalist No. 78', author: 'Alexander Hamilton', year: 1788, unit: 2,
+        summary: 'Defends an independent judiciary with the power of judicial review.',
+        keyIdeas: ['Judiciary is the "least dangerous branch" — no purse, no sword', 'Lifetime tenure ensures judicial independence', 'Courts must declare unconstitutional acts void', 'Foreshadows Marbury v. Madison'],
+        significance: 'Philosophical foundation for judicial review and judicial independence.' },
+      { id: 'brutus1', name: 'Brutus No. 1', author: 'Anti-Federalist (likely Robert Yates)', year: 1787, unit: 1,
+        summary: 'ANTI-FEDERALIST argument against ratifying the Constitution.',
+        keyIdeas: ['A republic cannot work in such a large, diverse country', 'Necessary and Proper + Supremacy Clauses give dangerous power', 'Federal courts will dominate state courts', 'Strong central government will swallow state sovereignty'],
+        significance: 'Major counterpoint to the Federalist Papers. Key to understanding ratification debate and ongoing federalism tensions.' },
+      { id: 'mlk', name: 'Letter from a Birmingham Jail', author: 'Martin Luther King Jr.', year: 1963, unit: 4,
+        summary: 'Written from jail to white clergymen who criticized civil rights protests as "unwise and untimely."',
+        keyIdeas: ['Defends NONVIOLENT DIRECT ACTION', 'Just laws uphold human dignity; unjust laws degrade it', 'Civil disobedience is moral when laws are unjust', 'Critiques white moderates who prefer "order" to justice'],
+        significance: 'Justifies civil disobedience within American constitutional and moral tradition.' },
+    ];
+
+    // =========================================================
+    // KEY TERMS BY UNIT
+    // =========================================================
+    const TERMS = [
+      { unit: 1, term: 'Popular Sovereignty', def: 'Government derives its authority from the consent of the governed.' },
+      { unit: 1, term: 'Republicanism', def: 'Citizens elect representatives to govern on their behalf.' },
+      { unit: 1, term: 'Federalism', def: 'Power is divided between national and state governments.' },
+      { unit: 1, term: 'Enumerated Powers', def: 'Powers explicitly granted to Congress in Article I, Section 8.' },
+      { unit: 1, term: 'Implied Powers', def: 'Powers not listed but derived from the Necessary and Proper Clause.' },
+      { unit: 1, term: 'Reserved Powers', def: 'Powers reserved to states by the 10th Amendment.' },
+      { unit: 1, term: 'Concurrent Powers', def: 'Powers shared by federal and state governments.' },
+      { unit: 1, term: 'Supremacy Clause', def: 'Article VI: Constitution and federal laws are supreme law of the land.' },
+      { unit: 1, term: 'Faction', def: 'A group united by interest adverse to others or the community (Federalist 10).' },
+      { unit: 1, term: 'Great (Connecticut) Compromise', def: 'Bicameral legislature: House by population, Senate equal per state.' },
+      { unit: 2, term: 'Separation of Powers', def: 'Division of government into legislative, executive, and judicial branches.' },
+      { unit: 2, term: 'Checks and Balances', def: 'Each branch limits the others (veto, override, judicial review, confirmation).' },
+      { unit: 2, term: 'Filibuster', def: 'Senate procedure to delay a vote by extended debate; ended by 60-vote cloture.' },
+      { unit: 2, term: 'Cloture', def: 'Senate procedure (60 votes) to end a filibuster.' },
+      { unit: 2, term: 'Pork Barrel Spending', def: 'Targeted spending in a representative\'s district to benefit constituents.' },
+      { unit: 2, term: 'Logrolling', def: 'Vote-trading among legislators to pass favored legislation.' },
+      { unit: 2, term: 'Executive Order', def: 'Presidential directive with force of law, based on existing authority.' },
+      { unit: 2, term: 'Executive Agreement', def: 'Agreement with a foreign leader; no Senate ratification (unlike treaties).' },
+      { unit: 2, term: 'Judicial Review', def: 'Power of courts to invalidate laws/actions that violate the Constitution.' },
+      { unit: 2, term: 'Stare Decisis', def: '"Let the decision stand" — judicial doctrine of following precedent.' },
+      { unit: 2, term: 'Judicial Activism vs. Restraint', def: 'Activism: willingness to overturn precedent. Restraint: defer to elected branches.' },
+      { unit: 3, term: 'Selective Incorporation', def: 'Court applies parts of the Bill of Rights to states via the 14th Amendment.' },
+      { unit: 3, term: 'Establishment Clause', def: '1st Amendment ban on government establishment of religion.' },
+      { unit: 3, term: 'Free Exercise Clause', def: '1st Amendment protection of religious practice.' },
+      { unit: 3, term: 'Symbolic Speech', def: 'Nonverbal expression protected by the 1st Amendment.' },
+      { unit: 3, term: 'Prior Restraint', def: 'Government censorship before publication; presumed unconstitutional.' },
+      { unit: 3, term: 'Due Process Clause', def: '5th/14th: government cannot deprive life, liberty, or property without fair procedures.' },
+      { unit: 3, term: 'Equal Protection Clause', def: '14th: states must apply laws equally; basis for civil rights cases.' },
+      { unit: 3, term: 'Miranda Rights', def: 'Suspects must be informed of rights to silence and counsel before custodial interrogation.' },
+      { unit: 4, term: 'Political Socialization', def: 'How people develop political beliefs (family, school, peers, media, religion).' },
+      { unit: 4, term: 'Political Ideology', def: 'A coherent set of beliefs about government and policy.' },
+      { unit: 4, term: 'Liberal (modern U.S.)', def: 'Generally supports active federal government in economy and civil rights protection.' },
+      { unit: 4, term: 'Conservative (modern U.S.)', def: 'Generally supports limited federal government and traditional social values.' },
+      { unit: 4, term: 'Libertarian', def: 'Favors minimal government in both economic and social spheres.' },
+      { unit: 4, term: 'Keynesian Economics', def: 'Government should manage demand through spending and taxation.' },
+      { unit: 4, term: 'Supply-Side Economics', def: 'Tax cuts and deregulation will spur production and growth.' },
+      { unit: 4, term: 'Sampling Error', def: 'Margin of error in a poll due to random sampling.' },
+      { unit: 5, term: 'Linkage Institutions', def: 'Channels connecting citizens to government: parties, interest groups, elections, media.' },
+      { unit: 5, term: 'Political Action Committee (PAC)', def: 'Organization that raises money for candidates; capped donations.' },
+      { unit: 5, term: 'Super PAC', def: 'Independent-expenditure-only group; unlimited funds, no candidate coordination.' },
+      { unit: 5, term: 'Iron Triangle', def: 'Stable alliance of a congressional committee, bureaucratic agency, and interest group.' },
+      { unit: 5, term: 'Issue Network', def: 'Looser, broader web of policy actors than iron triangles.' },
+      { unit: 5, term: 'Gerrymandering', def: 'Drawing district lines to favor a party (partisan) or racial group (racial).' },
+      { unit: 5, term: 'Incumbency Advantage', def: 'Sitting officeholders\' advantages: name recognition, fundraising, casework, franking.' },
+      { unit: 5, term: 'Open Primary', def: 'Any registered voter may vote, regardless of party.' },
+      { unit: 5, term: 'Closed Primary', def: 'Only registered party members may vote in that party\'s primary.' },
+      { unit: 5, term: 'Electoral College', def: '538 electors choose the president; 270 to win. Electors = House + Senate seats.' },
+      { unit: 5, term: 'Voter Turnout', def: 'Percentage of eligible voters who cast a ballot.' },
+    ];
+
+    // =========================================================
+    // HARD MULTIPLE CHOICE QUESTIONS
+    // =========================================================
+    const HARD_QUESTIONS = [
+      { q: 'A state passes a law requiring federal agents operating within its borders to obtain state approval before making arrests. The strongest constitutional objection to this law is the:',
+        options: ['10th Amendment', 'Supremacy Clause', 'Commerce Clause', 'Due Process Clause'],
+        correct: 1,
+        explain: 'States cannot regulate or interfere with federal officials operating within their authority. The Supremacy Clause (Article VI) makes federal law the "supreme law of the land" — see McCulloch v. Maryland.' },
+      { q: 'Following a Supreme Court ruling that strikes down a federal regulation as exceeding congressional authority, Congress passes a new statute authorizing the same regulation under a different constitutional clause. This sequence BEST illustrates:',
+        options: ['Judicial activism producing legislative backlash', 'Checks and balances between branches', 'Court-stripping of judicial review', 'A constitutional crisis'],
+        correct: 1,
+        explain: 'Congress responding to a judicial ruling by writing new legislation is a textbook example of checks and balances — branches limiting and responding to one another within their constitutional powers.' },
+      { q: 'Federalist No. 51 and Brutus No. 1 disagree most fundamentally about:',
+        options: ['Whether to include a Bill of Rights', 'Whether a large republic can adequately protect liberty', 'Whether the executive should be unitary', 'The role of judicial review'],
+        correct: 1,
+        explain: 'The core Federalist/Anti-Federalist split: Madison argued large republics protect liberty (by diluting faction); Brutus argued they cannot adequately represent or protect citizens.' },
+      { q: 'Which scenario best illustrates an EXECUTIVE check on the JUDICIAL branch?',
+        options: ['The president signing legislation into law', 'The president nominating federal judges', 'The president vetoing a bill', 'The Senate confirming a judicial nominee'],
+        correct: 1,
+        explain: 'Executive check on judiciary = nomination of judges. Senate confirmation is a LEGISLATIVE check on judiciary. Veto is executive on legislative.' },
+      { q: 'A 2022 study found turnout in midterm elections was 46% nationally, while presidential election turnout was 67%. The BEST explanation for this gap is:',
+        options: ['Election fraud disproportionately affects midterms', 'Lower visibility and perceived stakes reduce midterm motivation', 'Voter ID laws apply only to midterm elections', 'Demographics of eligible voters differ between cycles'],
+        correct: 1,
+        explain: 'Midterms get less media coverage and feel less consequential to many voters, depressing turnout — the classic "midterm dropoff."' },
+      { q: 'A president issues an executive order directing federal contractors to pay a minimum wage above the federal floor. Congress takes no action. This action is BEST described as:',
+        options: ['Unconstitutional usurpation of legislative power', 'Use of executive authority within established powers', 'Implied power requiring Senate ratification', 'A treaty-making function'],
+        correct: 1,
+        explain: 'Executive orders directing federal agencies and contractors fall within established executive authority — especially when Congress does not contradict them.' },
+      { q: 'A federal court of appeals strikes down a state law as conflicting with federal civil rights law. The state then re-passes a similar law with minor modifications. The federal courts will MOST LIKELY:',
+        options: ['Defer to the state under the 10th Amendment', 'Apply stare decisis from the appeals court ruling', 'Refer the case to Congress', 'Suspend judicial review of the new law'],
+        correct: 1,
+        explain: 'Stare decisis — courts apply established precedent to substantially similar cases.' },
+      { q: 'Which argument is MOST consistent with Federalist No. 10?',
+        options: ['Direct democracy is the safest form of government', 'A bill of rights is essential to protecting liberty', 'Multiple competing interests across a large nation prevent any single faction from dominating', 'A unitary executive ensures decisive government'],
+        correct: 2,
+        explain: 'Madison\'s core argument: factions are inevitable, but a large republic with many competing interests prevents any one faction from forming a tyrannical majority.' },
+      { q: 'The president signs an executive agreement with another country. Which of the following is TRUE?',
+        options: ['It requires Senate ratification by 2/3 vote', 'It has the same force as a treaty during the president\'s tenure but can be undone by a successor', 'It must be approved by the House of Representatives', 'It overrides existing federal statutes'],
+        correct: 1,
+        explain: 'Executive agreements skip Senate ratification but can be reversed by a future president — that\'s their key practical and constitutional difference from treaties.' },
+      { q: 'A nonprofit creates a political documentary critical of a senator and wants to air it 20 days before an election. Federal law restricts such expenditures. Based on Citizens United v. FEC, the law would MOST LIKELY be:',
+        options: ['Upheld because corporate political speech is unprotected', 'Upheld under the Commerce Clause', 'Struck down as a violation of the 1st Amendment', 'Struck down under the 14th Amendment'],
+        correct: 2,
+        explain: 'Citizens United held that independent political spending by corporations and nonprofits is protected speech under the 1st Amendment.' },
+      { q: 'Which is the MOST significant difference between an iron triangle and an issue network?',
+        options: ['Iron triangles involve only state actors; issue networks include private actors', 'Iron triangles are stable and narrow; issue networks are fluid and broad', 'Issue networks are illegal; iron triangles are legal', 'Iron triangles deal only with foreign policy'],
+        correct: 1,
+        explain: 'Iron triangle = tight, stable alliance (committee + agency + interest group). Issue network = looser web of many actors.' },
+      { q: 'A state\'s legislative districts have not been redrawn in 30 years despite massive urban growth, leaving rural districts with 1/8 the population of urban ones. A voter sues. Based on Baker v. Carr, a federal court is MOST LIKELY to:',
+        options: ['Decline to hear the case as a political question', 'Hear the case under the Equal Protection Clause', 'Defer to the state legislature', 'Refer the case to Congress'],
+        correct: 1,
+        explain: 'Baker made redistricting questions justiciable under the Equal Protection Clause — courts CAN hear them.' },
+      { q: 'In a recent poll, 52% of respondents supported a policy with a margin of error of ±4 points. Statistically, the BEST conclusion is:',
+        options: ['A clear majority supports the policy', 'The actual support is between 48% and 56%, so the result is inconclusive', 'The poll proves the policy is unpopular', 'The poll is invalid because of the margin of error'],
+        correct: 1,
+        explain: 'With a ±4 point margin, the true value could be 48–56%. That overlaps 50%, so we cannot confidently conclude majority support.' },
+      { q: 'Which scenario BEST illustrates the constitutional principle behind Federalist No. 70?',
+        options: ['Congress overriding a presidential veto', 'A single president making rapid decisions during a national emergency', 'The Supreme Court striking down a law', 'A governor declaring a state of emergency'],
+        correct: 1,
+        explain: 'Federalist 70 argues for a single energetic executive who can act decisively — exactly what Hamilton had in mind for emergencies.' },
+      { q: 'A state passes a law requiring all firearms in the state to be registered with state police, including in private homes. Based on McDonald v. Chicago, the law would MOST LIKELY be evaluated under:',
+        options: ['The Commerce Clause', 'The 2nd Amendment, as incorporated through the 14th', 'The 10th Amendment', 'The Supremacy Clause'],
+        correct: 1,
+        explain: 'McDonald incorporated the 2nd Amendment to the states via the 14th Amendment Due Process Clause.' },
+      { q: 'Which would be MOST clearly an unconstitutional violation of the Establishment Clause based on Engel v. Vitale?',
+        options: ['A student-led prayer at a private graduation ceremony', 'A teacher leading the class in a state-written prayer each morning', 'A school allowing student religious clubs to meet after school', 'A moment of silence with no religious content required'],
+        correct: 1,
+        explain: 'Engel struck down state-composed school prayer led by school officials — even if voluntary.' },
+      { q: 'When a Supreme Court justice writes a dissenting opinion, the IMMEDIATE legal effect is:',
+        options: ['The dissent overrides the majority opinion', 'The dissent has no binding legal effect but may influence future cases', 'The case is automatically reheard', 'The justice is removed from future related cases'],
+        correct: 1,
+        explain: 'Dissents are not binding law, but they shape future legal arguments and may inspire later majorities.' },
+      { q: 'Which is the strongest argument for the existence of a "two-presidency" thesis (where presidents have more power in foreign policy than domestic)?',
+        options: ['The Constitution explicitly grants the president unlimited foreign policy power', 'Congress is constitutionally barred from foreign affairs', 'Treaty-making, executive agreements, military command, and crisis response give presidents more unilateral foreign power', 'Foreign policy is exempt from judicial review'],
+        correct: 2,
+        explain: 'The two-presidency thesis rests on the practical reality that the president has more unilateral tools (commander in chief, executive agreements, recognition power) abroad than at home.' },
+      { q: 'Following a contested election, a state legislature considers a bill to give itself the power to override the popular vote and choose presidential electors. The strongest constitutional question raised by this bill is whether it conflicts with:',
+        options: ['Article II, Section 1, which grants states authority to direct the manner of choosing electors', 'The 14th Amendment\'s Equal Protection Clause and democratic norms', 'The Commerce Clause', 'The Necessary and Proper Clause'],
+        correct: 1,
+        explain: 'Article II does grant states power over electors, but Equal Protection (and democratic legitimacy) raises serious questions about overriding voters after the fact.' },
+      { q: 'In Marbury v. Madison, Chief Justice Marshall ruled that:',
+        options: ['Marbury should receive his commission', 'Section 13 of the Judiciary Act of 1789 was unconstitutional', 'The Supreme Court could compel Madison to act', 'The case was outside the Court\'s jurisdiction entirely'],
+        correct: 1,
+        explain: 'Marshall ruled the law granting the Court that original jurisdiction was unconstitutional — establishing judicial review while declining to rule for Marbury.' },
+    ];
+
+    // =========================================================
+    // SCOTUS COMPARISON SCENARIOS
+    // =========================================================
+    const COMPARISONS = [
+      { scenario: 'A public high school suspends students who wear black armbands during school hours to protest a recent state policy. Administrators admit there was no disruption to classes or school activities.',
+        options: ['marbury', 'tinker', 'engel', 'schenck'], correct: 'tinker',
+        explain: 'Like Tinker v. Des Moines: students engaging in non-disruptive symbolic speech in public school. The 1st Amendment protects them.' },
+      { scenario: 'A state law requires all gun owners to undergo state-mandated psychiatric evaluation before purchasing a firearm. A homeowner challenges this as a violation of his constitutional rights.',
+        options: ['lopez', 'mcdonald', 'schenck', 'brown'], correct: 'mcdonald',
+        explain: 'McDonald v. Chicago incorporated the 2nd Amendment to the states. A 2nd Amendment challenge to a state firearms law is the direct parallel.' },
+      { scenario: 'Congress passes a federal law making it a crime to possess marijuana within 500 feet of a public park, citing impacts on interstate drug commerce. A defendant argues the law exceeds congressional authority.',
+        options: ['mcculloch', 'lopez', 'baker', 'citizens'], correct: 'lopez',
+        explain: 'Like U.S. v. Lopez (gun-free school zones): Congress invoking the Commerce Clause to regulate non-economic activity in a localized area. Lopez set the limit.' },
+      { scenario: 'A school district mandates a daily moment of silent reflection led by a teacher who reads a state-approved religious passage. Parents sue.',
+        options: ['engel', 'yoder', 'tinker', 'gideon'], correct: 'engel',
+        explain: 'Engel v. Vitale: state-sponsored school prayer violates the Establishment Clause, even when nominally voluntary.' },
+      { scenario: 'A state legislature draws a snake-shaped congressional district that follows an interstate corridor specifically to create a majority-minority district. Voters sue claiming the district was drawn predominantly on race.',
+        options: ['shaw', 'baker', 'brown', 'citizens'], correct: 'shaw',
+        explain: 'Shaw v. Reno: districts drawn predominantly on race must survive strict scrutiny — even when intended to comply with the Voting Rights Act.' },
+      { scenario: 'A national newspaper obtains classified intelligence documents showing government deception in a military operation. The president seeks an emergency court order to prevent publication, citing national security.',
+        options: ['nyt', 'schenck', 'tinker', 'engel'], correct: 'nyt',
+        explain: 'NYT Co. v. United States: government must meet a heavy burden to justify prior restraint, even with national security claims.' },
+      { scenario: 'Old Order Mennonite parents refuse to send their teenage children to public high school, arguing secondary education would erode their religious community. The state prosecutes them under compulsory attendance laws.',
+        options: ['yoder', 'engel', 'tinker', 'gideon'], correct: 'yoder',
+        explain: 'Wisconsin v. Yoder: Free Exercise can override generally applicable laws when religious practice is sincerely burdened.' },
+      { scenario: 'A state court tries an indigent defendant on felony charges and refuses to appoint counsel because the state\'s budget for public defenders is exhausted. The defendant is convicted.',
+        options: ['gideon', 'mcdonald', 'tinker', 'marbury'], correct: 'gideon',
+        explain: 'Gideon v. Wainwright: states must provide counsel to indigent felony defendants under the 6th Amendment, incorporated through the 14th.' },
+      { scenario: 'A super PAC funded entirely by corporations spends $10 million on independent ads attacking a sitting senator weeks before an election. The FEC investigates whether the spending violates campaign finance restrictions.',
+        options: ['citizens', 'shaw', 'baker', 'lopez'], correct: 'citizens',
+        explain: 'Citizens United v. FEC: independent corporate political spending is protected speech under the 1st Amendment.' },
+      { scenario: 'A state has not redrawn its state senate districts since 1990, leaving sparsely populated rural districts with the same number of senators as densely populated urban ones. An urban resident sues.',
+        options: ['baker', 'shaw', 'marbury', 'mcculloch'], correct: 'baker',
+        explain: 'Baker v. Carr opened the door to "one person, one vote" by making redistricting justiciable under Equal Protection.' },
+      { scenario: 'The federal government creates a new national clean-energy bank. A state attempts to impose a special operating tax on the bank\'s in-state branches. The bank sues.',
+        options: ['mcculloch', 'lopez', 'shaw', 'roe'], correct: 'mcculloch',
+        explain: 'McCulloch v. Maryland: states cannot tax federal institutions ("the power to tax is the power to destroy") — and Congress has implied power to charter such institutions.' },
+      { scenario: 'A student is convicted of distributing flyers urging fellow students to refuse military registration during a wartime crisis. He claims 1st Amendment protection.',
+        options: ['schenck', 'tinker', 'nyt', 'yoder'], correct: 'schenck',
+        explain: 'Schenck v. United States upheld limits on speech that creates a "clear and present danger" — distributing draft-resistance materials in wartime was the original case.' },
+    ];
+
+    // =========================================================
+    // CONCEPT APPLICATION SCENARIOS
+    // =========================================================
+    const APPLICATIONS = [
+      { scenario: 'A senator from a small state inserts a $50 million highway project for her district into an unrelated defense bill in exchange for supporting another senator\'s health care amendment.',
+        q: 'This action is BEST described as which two practices working together?',
+        options: ['Filibuster and cloture', 'Pork barrel spending and logrolling', 'Gerrymandering and incumbency advantage', 'Issue advocacy and lobbying'],
+        correct: 1,
+        explain: 'Targeting district spending = pork barrel. Trading votes on unrelated bills = logrolling. Both are common in Congress.' },
+      { scenario: 'Two large corporations form an organization that raises $50 million from corporate donors to run independent television ads supporting candidates who favor lower corporate taxes. The organization does not coordinate with any campaigns.',
+        q: 'This organization is MOST accurately classified as a:',
+        options: ['Traditional PAC', 'Super PAC', '527 group with contribution limits', 'Lobbying firm'],
+        correct: 1,
+        explain: 'Super PACs raise unlimited funds for independent expenditures but cannot coordinate with campaigns — exactly the structure described.' },
+      { scenario: 'A senator delivers a 14-hour speech opposing a Supreme Court nominee, refusing to yield the floor. Senate leadership wants to force a vote.',
+        q: 'To end the senator\'s speech and force a vote, leadership would invoke:',
+        options: ['A discharge petition', 'Cloture, requiring 60 votes', 'A pocket veto', 'Senatorial courtesy'],
+        correct: 1,
+        explain: 'Cloture (60-vote threshold) ends a filibuster in the Senate. The other tools serve different purposes.' },
+      { scenario: 'A federal regulatory agency issues a complex rule on environmental emissions. Industry groups sue, and the relevant House committee schedules oversight hearings. Environmental groups lobby Congress to support the rule. Over time, the agency, the committee, and the environmental interest group develop a stable working relationship.',
+        q: 'This relationship MOST closely resembles a(n):',
+        options: ['Iron triangle', 'Issue network', 'Bureaucratic capture', 'Executive privilege arrangement'],
+        correct: 0,
+        explain: 'Iron triangle = stable, narrow alliance among a congressional committee, an agency, and an interest group, each gaining mutual benefit.' },
+      { scenario: 'A state requires voters to present specific forms of photo ID, accepts only certain types of ID, and limits early voting hours. Civil rights groups argue the rules disproportionately burden minority voters.',
+        q: 'Which constitutional doctrine is MOST DIRECTLY relevant to this challenge?',
+        options: ['Establishment Clause', 'Equal Protection Clause', 'Free Exercise Clause', 'Necessary and Proper Clause'],
+        correct: 1,
+        explain: 'Voter access laws that disproportionately burden particular groups raise Equal Protection concerns under the 14th Amendment.' },
+      { scenario: 'Congress passes legislation authorizing a national consumer protection agency. The Constitution does not explicitly mention "consumer protection" as a federal power.',
+        q: 'The strongest constitutional basis for this law is:',
+        options: ['The 10th Amendment', 'The Commerce Clause combined with the Necessary and Proper Clause', 'The Establishment Clause', 'Article III'],
+        correct: 1,
+        explain: 'Most modern federal regulatory authority rests on the Commerce Clause + Necessary and Proper — implied powers to regulate interstate economic activity.' },
+      { scenario: 'A president, frustrated with congressional inaction, directs federal agencies to stop enforcing a particular immigration provision and to prioritize other enforcement actions instead.',
+        q: 'This is BEST understood as:',
+        options: ['An unconstitutional refusal to "take care that the laws be faithfully executed"', 'A use of prosecutorial discretion that is generally within executive authority', 'A treaty action requiring Senate approval', 'An exercise of judicial review'],
+        correct: 1,
+        explain: 'Prosecutorial discretion — choosing where to focus enforcement resources — is a recognized executive power, though its limits are contested.' },
+      { scenario: 'A House committee chair refuses to schedule a hearing on a bill she opposes. The bill\'s sponsor wants to force it to the floor without committee approval.',
+        q: 'The procedural tool the sponsor would MOST LIKELY use is:',
+        options: ['A filibuster', 'A discharge petition', 'A pocket veto', 'A writ of mandamus'],
+        correct: 1,
+        explain: 'A discharge petition (218 House signatures) bypasses a committee chair to force a bill to the floor.' },
+      { scenario: 'Citizens organize a rally outside a state capitol to protest a recently passed law. The state requires a permit issued at least 72 hours in advance. Organizers sue, claiming the requirement violates their rights.',
+        q: 'Such "time, place, and manner" restrictions are constitutional if they are:',
+        options: ['Approved by Congress', 'Content-neutral, narrowly tailored, and leave open alternative channels', 'Confined to private property', 'Approved by federal courts in advance'],
+        correct: 1,
+        explain: 'Time, place, and manner restrictions are constitutional if content-neutral, narrowly tailored, and leave alternative channels of expression open.' },
+      { scenario: 'A presidential nominee for a federal district court has unanimous support from his home-state senators but faces opposition from senators in another region. By tradition, the home-state senators effectively decide whether the nomination moves forward.',
+        q: 'This practice is known as:',
+        options: ['Senatorial courtesy', 'Senatorial hold', 'Cloture', 'Filibuster'],
+        correct: 0,
+        explain: 'Senatorial courtesy: presidents traditionally defer to home-state senators on district court nominations.' },
+    ];
+
+    // =========================================================
+    // FRQ ARGUMENT PROMPTS
+    // =========================================================
+    const FRQ_PROMPTS = [
+      { title: 'Argument: Federalism',
+        prompt: 'Develop an argument that explains whether the federal government or the states should have more authority over policy areas like education, healthcare, or environmental regulation.',
+        instructions: 'Your essay must include a defensible thesis, evidence from at least ONE required foundational document, additional evidence (a case, principle, or example), and a response to an opposing perspective.',
+        documents: ['fed10', 'fed51', 'brutus1', 'constitution'],
+        rubric: [
+          { id: 'thesis', label: 'Defensible thesis that responds to the prompt with a clear claim (1 pt)' },
+          { id: 'doc', label: 'Specific evidence from at least one required foundational document (1 pt)' },
+          { id: 'second', label: 'Second piece of accurate, relevant evidence (1 pt)' },
+          { id: 'reason', label: 'Reasoning explaining how BOTH pieces of evidence support the thesis (1 pt)' },
+          { id: 'oppose', label: 'Responds to an opposing perspective with refutation, concession, or rebuttal (1 pt)' },
+          { id: 'rebut', label: 'Refutation/concession is logically sound and supported (1 pt)' },
+        ] },
+      { title: 'Argument: Judicial Power',
+        prompt: 'Develop an argument that explains whether the Supreme Court is too powerful, not powerful enough, or appropriately powerful in the modern American political system.',
+        instructions: 'Your essay must include a defensible thesis, evidence from at least ONE required foundational document, additional evidence, and a response to an opposing perspective.',
+        documents: ['fed78', 'brutus1', 'constitution'],
+        rubric: [
+          { id: 'thesis', label: 'Defensible thesis with clear claim (1 pt)' },
+          { id: 'doc', label: 'Evidence from at least one required document (Federalist 78 or Brutus 1 are most relevant) (1 pt)' },
+          { id: 'second', label: 'Second piece of evidence (e.g., Marbury, Brown, Citizens United) (1 pt)' },
+          { id: 'reason', label: 'Reasoning explicitly connects evidence to thesis (1 pt)' },
+          { id: 'oppose', label: 'Addresses an opposing view (1 pt)' },
+          { id: 'rebut', label: 'Refutes/concedes/rebuts that view with reasoning (1 pt)' },
+        ] },
+      { title: 'Argument: Civil Liberties vs. Security',
+        prompt: 'Develop an argument that explains whether civil liberties should ever be restricted in the interest of national security.',
+        instructions: 'Your essay must include a defensible thesis, evidence from at least ONE required foundational document, additional evidence, and a response to an opposing perspective.',
+        documents: ['constitution', 'fed10', 'mlk'],
+        rubric: [
+          { id: 'thesis', label: 'Defensible thesis (1 pt)' },
+          { id: 'doc', label: 'Required document evidence (Bill of Rights / Federalist 10 / Letter from Birmingham Jail) (1 pt)' },
+          { id: 'second', label: 'Second evidence: Schenck, NYT v. US, Tinker, etc. (1 pt)' },
+          { id: 'reason', label: 'Reasoning links evidence to thesis (1 pt)' },
+          { id: 'oppose', label: 'Opposing view addressed (1 pt)' },
+          { id: 'rebut', label: 'Refutation/concession is logical (1 pt)' },
+        ] },
+      { title: 'Argument: Two-Party System',
+        prompt: 'Develop an argument that explains whether the two-party system in the United States advances or hinders effective democratic representation.',
+        instructions: 'Your essay must include a defensible thesis, required document evidence, additional evidence, and response to opposing perspective.',
+        documents: ['fed10', 'brutus1'],
+        rubric: [
+          { id: 'thesis', label: 'Defensible thesis (1 pt)' },
+          { id: 'doc', label: 'Federalist 10 or Brutus 1 evidence (1 pt)' },
+          { id: 'second', label: 'Second evidence — examples: voter behavior, third parties, political polarization (1 pt)' },
+          { id: 'reason', label: 'Reasoning connects evidence to thesis (1 pt)' },
+          { id: 'oppose', label: 'Opposing view addressed (1 pt)' },
+          { id: 'rebut', label: 'Refutation/concession is logical (1 pt)' },
+        ] },
+    ];
+
+    // =========================================================
+    // SPEED ROUND QUESTIONS
+    // =========================================================
+    const SPEED_QUESTIONS = [
+      { q: 'Which case established judicial review?', options: ['McCulloch', 'Marbury', 'Brown', 'Schenck'], correct: 1 },
+      { q: 'Federalist 10 warns against:', options: ['Tyranny', 'Faction', 'Monarchy', 'Anarchy'], correct: 1 },
+      { q: 'Right to counsel was incorporated in:', options: ['Gideon', 'Miranda', 'Tinker', 'Brown'], correct: 0 },
+      { q: '60 votes ends a filibuster — this is called:', options: ['Quorum', 'Cloture', 'Recess', 'Veto'], correct: 1 },
+      { q: 'Brutus No. 1 was written by a(n):', options: ['Federalist', 'Anti-Federalist', 'Loyalist', 'Whig'], correct: 1 },
+      { q: 'Citizens United dealt with:', options: ['Voter ID', 'Campaign finance', 'Gun rights', 'Abortion'], correct: 1 },
+      { q: 'Powers reserved to the states are in the:', options: ['1st Amend.', '10th Amend.', '14th Amend.', '17th Amend.'], correct: 1 },
+      { q: 'Engel v. Vitale struck down:', options: ['Bible classes', 'School prayer', 'Pledge of allegiance', 'Religious holidays'], correct: 1 },
+      { q: 'McCulloch confirmed:', options: ['States\' rights', 'Implied powers', 'Free speech', 'Equal protection'], correct: 1 },
+      { q: 'Symbolic speech was protected in:', options: ['Schenck', 'Tinker', 'Roe', 'Gideon'], correct: 1 },
+      { q: '2nd Amendment incorporated in:', options: ['Heller', 'McDonald', 'Lopez', 'Brown'], correct: 1 },
+      { q: 'Iron triangle = committee + agency + ?', options: ['Court', 'Lobby/Interest group', 'Voter', 'Party'], correct: 1 },
+      { q: 'Federalist 70 advocates for a:', options: ['Plural exec.', 'Single energetic exec.', 'Weak exec.', 'Hereditary exec.'], correct: 1 },
+      { q: '"One person, one vote" came from:', options: ['Marbury', 'Baker v. Carr', 'Brown', 'Roe'], correct: 1 },
+      { q: 'Prior restraint was rejected in:', options: ['NYT v. US', 'Schenck', 'Engel', 'Lopez'], correct: 0 },
+      { q: 'Shaw v. Reno limited:', options: ['Free press', 'Racial gerrymandering', 'Religious schools', 'Gun rights'], correct: 1 },
+      { q: 'Fed 51: "ambition must be made to ___ ambition"', options: ['Defeat', 'Counteract', 'Embrace', 'Surrender'], correct: 1 },
+      { q: 'Lopez LIMITED which clause?', options: ['Establishment', 'Commerce', 'Necessary & Proper', 'Equal Protection'], correct: 1 },
+      { q: 'Wisconsin v. Yoder protected:', options: ['Free press', 'Free exercise', 'Free assembly', 'Free speech'], correct: 1 },
+      { q: 'Articles of Confederation FAILED because:', options: ['Too strong fed gov', 'Too weak fed gov', 'No states', 'Foreign invasion'], correct: 1 },
+      { q: 'Senate confirmation is a ___ check on the executive', options: ['Judicial', 'Legislative', 'Executive', 'Federal'], correct: 1 },
+      { q: 'MLK\'s Birmingham letter defends:', options: ['Armed revolt', 'Nonviolent civil disobedience', 'States\' rights', 'Open primaries'], correct: 1 },
+      { q: 'Open primary = ?', options: ['Only party members vote', 'Any registered voter votes', 'Party leaders pick', 'Caucus only'], correct: 1 },
+      { q: 'Pocket veto requires Congress to be:', options: ['In session', 'Adjourned', 'Tied', 'Unanimous'], correct: 1 },
+      { q: 'Judicial review power: enumerated or implied?', options: ['Enumerated', 'Implied', 'Reserved', 'Concurrent'], correct: 1 },
+    ];
+
+    // =========================================================
+    // STORAGE (localStorage)
+    // =========================================================
+    const safeGet = (key, fallback) => {
+      try {
+        const v = localStorage.getItem(key);
+        if (v == null) return fallback;
+        return JSON.parse(v);
+      } catch { return fallback; }
+    };
+    const safeSet = (key, value) => {
+      try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+    };
+
+    const UNIT_NAMES = {
+      1: 'Foundations of Democracy',
+      2: 'Branches of Government',
+      3: 'Civil Liberties & Rights',
+      4: 'Ideologies & Beliefs',
+      5: 'Political Participation',
+    };
+
+    const COLORS = {
+      cream: '#f5efe1', navy: '#0f1c33', brick: '#9c2b1c', gold: '#c89d4f', ink: '#1a1a1a',
+    };
+
+    const BADGE_LABELS = {
+      firstSpeed: 'Speed Demon', combo10: '10x Combo', perfectSpeed: 'Flawless Victory',
+      finalPass: 'Exam Passed', finalAce: 'Constitutional Scholar', frqDone: 'Argument Crafter',
+    };
+
+    // =========================================================
+    // MAIN APP
+    // =========================================================
+    function App() {
+      const [view, setView] = useState('home');
+      const [studySub, setStudySub] = useState('cases');
+      const [drillSub, setDrillSub] = useState('speed');
+
+      const [progress, setProgress] = useState({ cases: {}, docs: {}, terms: {} });
+      const [stats, setStats] = useState({
+        quizBest: 0, quizAttempts: 0, quizLast: 0,
+        speedBest: 0, comboBest: 0, bossBest: 0, bossAttempts: 0,
+        xp: 0, badges: {},
+      });
+      const [loaded, setLoaded] = useState(false);
+
+      useEffect(() => {
+        const p = safeGet('apgov:progress', { cases: {}, docs: {}, terms: {} });
+        const s = safeGet('apgov:stats', {
+          quizBest: 0, quizAttempts: 0, quizLast: 0,
+          speedBest: 0, comboBest: 0, bossBest: 0, bossAttempts: 0,
+          xp: 0, badges: {},
+        });
+        setProgress(p);
+        setStats(s);
+        setLoaded(true);
+      }, []);
+
+      const updateProgress = (kind, id, status) => {
+        const next = { ...progress, [kind]: { ...progress[kind], [id]: status } };
+        setProgress(next);
+        safeSet('apgov:progress', next);
+      };
+      const updateStats = (patch, badgeKey) => {
+        const newStats = { ...stats, ...patch };
+        if (badgeKey) newStats.badges = { ...stats.badges, [badgeKey]: true };
+        setStats(newStats);
+        safeSet('apgov:stats', newStats);
+      };
+      const addXP = (amt, badgeKey) => {
+        updateStats({ xp: (stats.xp || 0) + amt }, badgeKey);
+      };
+
+      return (
+        <div className="min-h-screen w-full"
+          style={{
+            backgroundColor: COLORS.cream,
+            backgroundImage: `radial-gradient(circle at 20% 10%, rgba(200,157,79,0.10), transparent 40%), radial-gradient(circle at 90% 90%, rgba(156,43,28,0.06), transparent 40%)`,
+            fontFamily: "'Inter', system-ui, sans-serif",
+            color: COLORS.navy,
+          }}>
+          <Header view={view} setView={setView} stats={stats} />
+          <main className="max-w-6xl mx-auto px-4 sm:px-8 pb-24">
+            {!loaded ? (
+              <div className="py-32 text-center" style={{ fontFamily: "'Fraunces', serif" }}>
+                <div className="text-2xl italic">Opening the Constitution…</div>
+              </div>
+            ) : (
+              <>
+                {view === 'home' && <Home stats={stats} progress={progress} setView={setView} setStudySub={setStudySub} setDrillSub={setDrillSub} />}
+                {view === 'study' && <StudyHub sub={studySub} setSub={setStudySub} progress={progress} updateProgress={updateProgress} addXP={addXP} />}
+                {view === 'drill' && <DrillHub sub={drillSub} setSub={setDrillSub} stats={stats} updateStats={updateStats} addXP={addXP} />}
+                {view === 'boss' && <BossMode stats={stats} updateStats={updateStats} addXP={addXP} />}
+              </>
+            )}
+          </main>
+          <footer className="text-center py-8 text-xs opacity-60" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+            AP US Government & Politics — Study Tool
+          </footer>
+        </div>
+      );
+    }
+
+    // =========================================================
+    // HEADER
+    // =========================================================
+    function Header({ view, setView, stats }) {
+      const tabs = [
+        { id: 'home', label: 'Home', icon: HomeIcon },
+        { id: 'study', label: 'Study', icon: BookOpen },
+        { id: 'drill', label: 'Drill', icon: Swords },
+        { id: 'boss', label: 'Final Exam', icon: Crown },
+      ];
+      return (
+        <header className="border-b-2 sticky top-0 z-20" style={{ borderColor: COLORS.navy, backgroundColor: '#f5efe1ee', backdropFilter: 'blur(8px)' }}>
+          <div className="max-w-6xl mx-auto px-4 sm:px-8 pt-4 pb-2.5">
+            <div className="flex items-baseline justify-between flex-wrap gap-3">
+              <div>
+                <div className="text-2xl sm:text-4xl leading-none tracking-tight"
+                     style={{ fontFamily: "'Fraunces', serif", fontWeight: 900, color: COLORS.navy, letterSpacing: '-0.02em' }}>
+                  The Constitutional Reader
+                </div>
+                <div className="mt-1 text-[10px] uppercase tracking-[0.2em]"
+                     style={{ color: COLORS.brick, fontFamily: "'JetBrains Mono', monospace" }}>
+                  AP US Government · Hard Mode
+                </div>
+              </div>
+              <div className="flex gap-3 items-center text-xs" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                <div className="flex items-center gap-1.5 px-2.5 py-1 border" style={{ borderColor: COLORS.gold, color: COLORS.navy }}>
+                  <Sparkles size={12} style={{ color: COLORS.gold }} />
+                  <span style={{ fontWeight: 700 }}>{stats.xp || 0}</span> XP
+                </div>
+              </div>
+            </div>
+            <nav className="mt-4 flex gap-1 sm:gap-2 overflow-x-auto -mx-1 px-1">
+              {tabs.map(t => {
+                const Icn = t.icon;
+                const active = view === t.id;
+                return (
+                  <button key={t.id} onClick={() => setView(t.id)}
+                    className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm transition-all whitespace-nowrap"
+                    style={{
+                      fontFamily: "'Fraunces', serif", fontWeight: 600, letterSpacing: '0.02em',
+                      color: active ? '#fff' : COLORS.navy,
+                      backgroundColor: active ? COLORS.navy : 'transparent',
+                      border: `1.5px solid ${active ? COLORS.navy : 'transparent'}`,
+                      borderRadius: 2,
+                    }}>
+                    <Icn size={15} />
+                    {t.label}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        </header>
+      );
+    }
+
+    // =========================================================
+    // HOME
+    // =========================================================
+    function Home({ stats, progress, setView, setStudySub, setDrillSub }) {
+      const masteredCount = (obj) => Object.values(obj || {}).filter(v => v === 'mastered').length;
+      const totalMastered = masteredCount(progress.cases) + masteredCount(progress.docs) + masteredCount(progress.terms);
+      const totalItems = CASES.length + DOCS.length + TERMS.length;
+      const pct = Math.round((totalMastered / totalItems) * 100);
+      const level = Math.floor((stats.xp || 0) / 100) + 1;
+      const xpInLevel = (stats.xp || 0) % 100;
+      const badges = stats.badges || {};
+      const hasBadges = Object.keys(badges).length > 0;
+      const drills = [
+        { id: 'speed', title: 'Speed Round', sub: '15s · 3 lives · combos', icon: Zap, color: COLORS.brick },
+        { id: 'compare', title: 'SCOTUS Compare', sub: 'Match scenarios to cases', icon: Scale, color: COLORS.navy },
+        { id: 'apply', title: 'Apply It', sub: 'Real-world scenarios', icon: Target, color: COLORS.navy },
+        { id: 'frq', title: 'FRQ Practice', sub: 'Argument essays + rubric', icon: PenLine, color: COLORS.navy },
+      ];
+      return (
+        <div className="pt-8">
+          <section className="grid md:grid-cols-5 gap-5 items-end pb-8 border-b" style={{ borderColor: COLORS.navy + '33' }}>
+            <div className="md:col-span-3">
+              <div className="text-xs uppercase tracking-[0.25em] mb-2" style={{ color: COLORS.brick, fontFamily: "'JetBrains Mono', monospace" }}>
+                Welcome back
+              </div>
+              <h1 className="leading-[0.95]" style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, fontSize: 'clamp(2rem, 5.5vw, 3.6rem)', color: COLORS.navy, letterSpacing: '-0.03em' }}>
+                Earn your <em style={{ color: COLORS.brick }}>5</em> on the AP exam.
+              </h1>
+              <p className="mt-3 text-base max-w-xl" style={{ fontFamily: "'Fraunces', serif", lineHeight: 1.5 }}>
+                Real exam-format questions, scenario-based application, SCOTUS comparison, and full FRQ practice. Earn XP. Beat your high score.
+              </p>
+            </div>
+            <div className="md:col-span-2 grid gap-3">
+              <div className="border-2 p-5" style={{ borderColor: COLORS.navy, backgroundColor: '#fff8e8' }}>
+                <div className="flex items-baseline justify-between mb-1">
+                  <div className="text-xs uppercase tracking-[0.2em]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Level</div>
+                  <div className="text-3xl" style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: COLORS.brick }}>{level}</div>
+                </div>
+                <div className="h-2 w-full" style={{ backgroundColor: COLORS.navy + '20' }}>
+                  <div className="h-full transition-all duration-700" style={{ width: xpInLevel + '%', backgroundColor: COLORS.gold }} />
+                </div>
+                <div className="mt-1.5 text-[10px] flex justify-between" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                  <span>{xpInLevel}/100 XP to next level</span>
+                  <span>Total: {stats.xp || 0}</span>
+                </div>
+              </div>
+              <div className="border-2 p-5" style={{ borderColor: COLORS.navy + '60' }}>
+                <div className="flex items-baseline justify-between">
+                  <div className="text-xs uppercase tracking-[0.2em]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Mastery</div>
+                  <div className="text-2xl" style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: COLORS.navy }}>{pct}%</div>
+                </div>
+                <div className="mt-1 text-[11px] opacity-70" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                  {totalMastered} / {totalItems} flashcards mastered
+                </div>
+              </div>
+            </div>
+          </section>
+          <section className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+            <Stat label="Speed Best" value={stats.speedBest || 0} icon={Zap} color={COLORS.brick} />
+            <Stat label="Top Combo" value={stats.comboBest || 0} icon={Flame} color={COLORS.gold} />
+            <Stat label="Final Best" value={(stats.bossBest || 0) + (stats.bossBest ? '%' : '')} icon={Crown} color={COLORS.navy} />
+            <Stat label="Quiz Attempts" value={stats.quizAttempts || 0} icon={Brain} color={COLORS.navy} />
+          </section>
+          <section className="grid md:grid-cols-2 gap-4 mt-8">
+            <button onClick={() => { setStudySub('cases'); setView('study'); }}
+              className="text-left p-7 transition-all hover:-translate-y-1"
+              style={{ backgroundColor: '#fdfaf0', border: `2px solid ${COLORS.navy}` }}>
+              <div className="flex items-center gap-3 text-xs uppercase tracking-[0.2em]" style={{ fontFamily: "'JetBrains Mono', monospace", color: COLORS.brick }}>
+                <BookOpen size={14} /> Study
+              </div>
+              <div className="mt-3 text-3xl" style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, color: COLORS.navy }}>
+                Cases. Documents. Terms.
+              </div>
+              <p className="mt-2 text-sm opacity-80" style={{ fontFamily: "'Fraunces', serif" }}>
+                All 15 required SCOTUS cases, 9 foundational documents, and key vocabulary across 5 units.
+              </p>
+            </button>
+            <button onClick={() => { setDrillSub('speed'); setView('drill'); }}
+              className="text-left p-7 transition-all hover:-translate-y-1"
+              style={{ backgroundColor: COLORS.navy, color: '#fff8e8' }}>
+              <div className="flex items-center gap-3 text-xs uppercase tracking-[0.2em]" style={{ fontFamily: "'JetBrains Mono', monospace", color: COLORS.gold }}>
+                <Swords size={14} /> Drill
+              </div>
+              <div className="mt-3 text-3xl" style={{ fontFamily: "'Fraunces', serif", fontWeight: 700 }}>
+                Speed Round. SCOTUS Compare. FRQ.
+              </div>
+              <p className="mt-2 text-sm opacity-80" style={{ fontFamily: "'Fraunces', serif" }}>
+                Game modes that test you the way the exam will. Earn XP. Build streaks.
+              </p>
+            </button>
+          </section>
+          <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+            {drills.map(d => {
+              const Icn = d.icon;
+              return (
+                <button key={d.id} onClick={() => { setDrillSub(d.id); setView('drill'); }}
+                  className="text-left p-5 border transition-all hover:-translate-y-0.5"
+                  style={{ borderColor: COLORS.navy + '40', backgroundColor: '#fdfaf0' }}>
+                  <Icn size={22} style={{ color: d.color }} />
+                  <div className="mt-3 text-lg" style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, color: COLORS.navy }}>{d.title}</div>
+                  <div className="text-[11px] mt-1 opacity-70" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{d.sub}</div>
+                </button>
+              );
+            })}
+          </section>
+          <section className="mt-6">
+            <button onClick={() => setView('boss')}
+              className="w-full text-left p-7 transition-all hover:-translate-y-1 relative overflow-hidden"
+              style={{ backgroundColor: COLORS.brick, color: '#fff8e8' }}>
+              <div className="flex items-center gap-3 text-xs uppercase tracking-[0.2em]" style={{ fontFamily: "'JetBrains Mono', monospace", color: COLORS.gold }}>
+                <Crown size={14} /> Final Boss
+              </div>
+              <div className="mt-2 text-4xl sm:text-5xl" style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, letterSpacing: '-0.02em' }}>
+                The Final Exam.
+              </div>
+              <p className="mt-2 text-sm opacity-90 max-w-xl" style={{ fontFamily: "'Fraunces', serif" }}>
+                20 mixed questions. No skips. 8-minute timer. Prove you can do it.
+              </p>
+              <div className="mt-3 text-xs opacity-80" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                Best: {stats.bossBest ? stats.bossBest + '%' : '—'} · Attempts: {stats.bossAttempts || 0}
+              </div>
+            </button>
+          </section>
+          {hasBadges && (
+            <section className="mt-8">
+              <div className="text-xs uppercase tracking-[0.25em] mb-3" style={{ color: COLORS.brick, fontFamily: "'JetBrains Mono', monospace" }}>
+                Achievements
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {Object.keys(badges).map(b => (
+                  <div key={b} className="px-3 py-1.5 border-2 text-xs" style={{ borderColor: COLORS.gold, color: COLORS.navy, fontFamily: "'JetBrains Mono', monospace", backgroundColor: '#fff8e8' }}>
+                    <Trophy size={11} className="inline mr-1.5" style={{ color: COLORS.gold }} />
+                    {BADGE_LABELS[b] || b}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+      );
+    }
+
+    function Stat({ label, value, icon: Icn, color }) {
+      return (
+        <div className="border p-3" style={{ borderColor: COLORS.navy + '30', backgroundColor: '#fdfaf0' }}>
+          <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.15em]" style={{ fontFamily: "'JetBrains Mono', monospace", opacity: 0.7 }}>
+            <Icn size={12} style={{ color }} />
+            {label}
+          </div>
+          <div className="text-2xl mt-1" style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, color }}>{value}</div>
+        </div>
+      );
+    }
+
+    // =========================================================
+    // STUDY HUB
+    // =========================================================
+    function StudyHub({ sub, setSub, progress, updateProgress, addXP }) {
+      const subs = [
+        { id: 'cases', label: 'Cases', icon: Scale },
+        { id: 'docs', label: 'Documents', icon: FileText },
+        { id: 'terms', label: 'Terms', icon: BookOpen },
+      ];
+      return (
+        <div className="pt-6">
+          <SubNav items={subs} active={sub} onChange={setSub} />
+          {sub === 'cases' && (
+            <Flashcards items={CASES} kind="cases" progress={progress.cases}
+              onUpdate={(id, status) => { updateProgress('cases', id, status); if (status === 'mastered') addXP(2); }}
+              renderFront={(c) => <CaseFront c={c} />} renderBack={(c) => <CaseBack c={c} />} />
+          )}
+          {sub === 'docs' && (
+            <Flashcards items={DOCS} kind="docs" progress={progress.docs}
+              onUpdate={(id, status) => { updateProgress('docs', id, status); if (status === 'mastered') addXP(2); }}
+              renderFront={(d) => <DocFront d={d} />} renderBack={(d) => <DocBack d={d} />} />
+          )}
+          {sub === 'terms' && (
+            <TermsView progress={progress.terms} onUpdate={(id, status) => { updateProgress('terms', id, status); if (status === 'mastered') addXP(1); }} />
+          )}
+        </div>
+      );
+    }
+
+    function SubNav({ items, active, onChange }) {
+      return (
+        <div className="flex gap-2 mb-6 overflow-x-auto -mx-1 px-1">
+          {items.map(s => {
+            const Icn = s.icon;
+            const isActive = active === s.id;
+            return (
+              <button key={s.id} onClick={() => onChange(s.id)}
+                className="flex items-center gap-2 px-4 py-2 text-sm transition-all whitespace-nowrap"
+                style={{
+                  fontFamily: "'Fraunces', serif", fontWeight: 600,
+                  border: `1.5px solid ${isActive ? COLORS.navy : COLORS.navy + '30'}`,
+                  backgroundColor: isActive ? COLORS.navy : 'transparent',
+                  color: isActive ? '#fff8e8' : COLORS.navy,
+                }}>
+                <Icn size={14} /> {s.label}
+              </button>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // =========================================================
+    // FLASHCARDS
+    // =========================================================
+    function Flashcards({ items, kind, progress, onUpdate, renderFront, renderBack }) {
+      const [order, setOrder] = useState(() => items.map((_, i) => i));
+      const [idx, setIdx] = useState(0);
+      const [flipped, setFlipped] = useState(false);
+      const [filter, setFilter] = useState('all');
+      const visibleOrder = useMemo(() => {
+        return order.filter(i => {
+          const status = progress[items[i].id];
+          if (filter === 'review') return status === 'review';
+          if (filter === 'unseen') return !status;
+          return true;
+        });
+      }, [order, progress, filter, items]);
+      const safeIdx = Math.min(idx, Math.max(0, visibleOrder.length - 1));
+      const current = visibleOrder.length > 0 ? items[visibleOrder[safeIdx]] : null;
+      const next = () => { setFlipped(false); setTimeout(() => setIdx(i => (i + 1) % Math.max(visibleOrder.length, 1)), 100); };
+      const prev = () => { setFlipped(false); setTimeout(() => setIdx(i => (i - 1 + visibleOrder.length) % Math.max(visibleOrder.length, 1)), 100); };
+      const shuffle = () => { setOrder([...order].sort(() => Math.random() - 0.5)); setIdx(0); setFlipped(false); };
+      const mark = (status) => { if (!current) return; onUpdate(current.id, status); next(); };
+      const status = current ? progress[current.id] : null;
+      return (
+        <div>
+          <div className="flex flex-wrap gap-3 items-center justify-between mb-5">
+            <h2 className="text-2xl sm:text-3xl" style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: COLORS.navy, letterSpacing: '-0.02em' }}>
+              {kind === 'cases' ? 'Fifteen Cases.' : 'Nine Documents.'}
+            </h2>
+            <div className="flex gap-2 items-center text-xs" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+              {['all', 'review', 'unseen'].map(f => (
+                <button key={f} onClick={() => { setFilter(f); setIdx(0); }}
+                  className="px-3 py-1.5 border uppercase tracking-wider"
+                  style={{
+                    borderColor: filter === f ? COLORS.navy : COLORS.navy + '40',
+                    backgroundColor: filter === f ? COLORS.navy : 'transparent',
+                    color: filter === f ? '#fff8e8' : COLORS.navy,
+                  }}>{f}</button>
+              ))}
+              <button onClick={shuffle} className="p-2 border" style={{ borderColor: COLORS.navy + '40', color: COLORS.navy }}>
+                <Shuffle size={14} />
+              </button>
+            </div>
+          </div>
+          {visibleOrder.length === 0 ? (
+            <div className="border-2 border-dashed p-16 text-center" style={{ borderColor: COLORS.navy + '40' }}>
+              <p style={{ fontFamily: "'Fraunces', serif", fontSize: '1.25rem', color: COLORS.navy }} className="italic">
+                Nothing here — try a different filter.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="relative" style={{ perspective: '1600px' }}>
+                <div onClick={() => setFlipped(f => !f)}
+                  className="cursor-pointer min-h-[440px] transition-transform duration-500"
+                  style={{ transformStyle: 'preserve-3d', transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}>
+                  <div className="absolute inset-0 p-6 sm:p-9 border-2 flex flex-col"
+                    style={{ backfaceVisibility: 'hidden', borderColor: COLORS.navy, backgroundColor: '#fdfaf0', boxShadow: '6px 6px 0 ' + COLORS.navy }}>
+                    {renderFront(current)}
+                    <div className="mt-auto pt-5 flex items-center justify-between text-xs" style={{ fontFamily: "'JetBrains Mono', monospace", color: COLORS.navy + 'aa' }}>
+                      <span className="flex items-center gap-1.5"><Eye size={12} /> Tap to reveal</span>
+                      <span>{safeIdx + 1} / {visibleOrder.length}</span>
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 p-6 sm:p-9 border-2 overflow-y-auto"
+                    style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', borderColor: COLORS.brick, backgroundColor: '#fff8e8', boxShadow: '6px 6px 0 ' + COLORS.brick }}>
+                    {renderBack(current)}
+                    <div className="mt-5 pt-3 border-t flex items-center justify-between text-xs" style={{ borderColor: COLORS.brick + '40', fontFamily: "'JetBrains Mono', monospace", color: COLORS.brick }}>
+                      <span className="flex items-center gap-1.5"><EyeOff size={12} /> Tap to flip back</span>
+                      <span>{safeIdx + 1} / {visibleOrder.length}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-5 flex flex-wrap gap-3 items-center justify-between">
+                <div className="flex gap-2">
+                  <button onClick={prev} className="p-3 border-2" style={{ borderColor: COLORS.navy, color: COLORS.navy }}>
+                    <ChevronLeft size={18} />
+                  </button>
+                  <button onClick={next} className="p-3 border-2" style={{ borderColor: COLORS.navy, color: COLORS.navy }}>
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
+                <div className="text-xs" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                  {status === 'mastered' && <span style={{ color: COLORS.brick }}>● Mastered</span>}
+                  {status === 'review' && <span style={{ color: COLORS.gold }}>● Needs review</span>}
+                  {!status && <span style={{ opacity: 0.6 }}>● Unseen</span>}
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => mark('review')}
+                    className="flex items-center gap-2 px-4 py-3 border-2 text-sm"
+                    style={{ borderColor: COLORS.gold, color: COLORS.navy, fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
+                    <RotateCcw size={15} /> Review again
+                  </button>
+                  <button onClick={() => mark('mastered')}
+                    className="flex items-center gap-2 px-4 py-3 text-sm"
+                    style={{ backgroundColor: COLORS.navy, color: '#fff8e8', fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
+                    <Check size={15} /> Got it
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      );
+    }
+
+    function CaseFront({ c }) {
+      return (
+        <div className="flex flex-col h-full">
+          <div className="flex items-baseline gap-3 text-xs" style={{ fontFamily: "'JetBrains Mono', monospace", color: COLORS.navy + '99' }}>
+            <span style={{ color: COLORS.brick }}>UNIT {c.unit}</span><span>·</span><span>{c.year}</span>
+          </div>
+          <div className="mt-3 text-3xl sm:text-4xl leading-tight" style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: COLORS.navy, letterSpacing: '-0.02em' }}>
+            {c.name}
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {c.amendments.map(a => (
+              <span key={a} className="text-[10px] uppercase tracking-wider px-2 py-1" style={{ fontFamily: "'JetBrains Mono', monospace", border: `1px solid ${COLORS.navy}40`, color: COLORS.navy }}>
+                {a}
+              </span>
+            ))}
+          </div>
+          <div className="mt-auto pt-6 italic text-sm sm:text-base" style={{ fontFamily: "'Fraunces', serif", color: COLORS.navy + 'cc' }}>
+            State the facts, ruling, and significance.
+          </div>
+        </div>
+      );
+    }
+
+    function CaseBack({ c }) {
+      return (
+        <div>
+          <div className="text-xl sm:text-2xl mb-4" style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, color: COLORS.navy }}>
+            {c.name} <span className="opacity-50 text-sm" style={{ fontFamily: "'JetBrains Mono', monospace" }}>({c.year})</span>
+          </div>
+          <Section label="Facts" body={c.facts} />
+          <Section label="Ruling" body={c.ruling} />
+          <Section label="Significance" body={c.significance} accent />
+        </div>
+      );
+    }
+
+    function DocFront({ d }) {
+      return (
+        <div className="flex flex-col h-full">
+          <div className="flex items-baseline gap-3 text-xs" style={{ fontFamily: "'JetBrains Mono', monospace", color: COLORS.navy + '99' }}>
+            <span>{d.year}</span><span>·</span><span style={{ color: COLORS.gold }}>{d.author}</span>
+          </div>
+          <div className="mt-3 text-3xl sm:text-4xl leading-tight" style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: COLORS.navy, letterSpacing: '-0.02em' }}>
+            {d.name}
+          </div>
+          <div className="mt-auto pt-6 italic text-sm sm:text-base" style={{ fontFamily: "'Fraunces', serif", color: COLORS.navy + 'cc' }}>
+            State the main argument and key ideas.
+          </div>
+        </div>
+      );
+    }
+
+    function DocBack({ d }) {
+      return (
+        <div>
+          <div className="text-xl sm:text-2xl mb-4" style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, color: COLORS.navy }}>
+            {d.name} <span className="opacity-50 text-sm" style={{ fontFamily: "'JetBrains Mono', monospace" }}>({d.year})</span>
+          </div>
+          <Section label="Summary" body={d.summary} />
+          <div className="mb-3">
+            <div className="text-[10px] uppercase tracking-[0.2em] mb-1.5" style={{ color: COLORS.brick, fontFamily: "'JetBrains Mono', monospace" }}>Key Ideas</div>
+            <ul className="space-y-1 text-sm" style={{ fontFamily: "'Fraunces', serif" }}>
+              {d.keyIdeas.map((k, i) => (
+                <li key={i} className="flex gap-2">
+                  <span style={{ color: COLORS.brick }}>§</span><span>{k}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <Section label="Significance" body={d.significance} accent />
+        </div>
+      );
+    }
+
+    function Section({ label, body, accent }) {
+      return (
+        <div className="mb-3">
+          <div className="text-[10px] uppercase tracking-[0.2em] mb-1" style={{ color: COLORS.brick, fontFamily: "'JetBrains Mono', monospace" }}>{label}</div>
+          <p className="text-sm leading-relaxed" style={{ fontFamily: "'Fraunces', serif", color: COLORS.navy, fontWeight: accent ? 600 : 400 }}>
+            {body}
+          </p>
+        </div>
+      );
+    }
+
+    function TermsView({ progress, onUpdate }) {
+      const [activeUnit, setActiveUnit] = useState(1);
+      const unitTerms = TERMS.filter(t => t.unit === activeUnit);
+      return (
+        <div>
+          <h2 className="text-2xl sm:text-3xl mb-5" style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: COLORS.navy, letterSpacing: '-0.02em' }}>
+            Vocabulary by Unit.
+          </h2>
+          <div className="flex flex-wrap gap-2 mb-5">
+            {[1, 2, 3, 4, 5].map(u => (
+              <button key={u} onClick={() => setActiveUnit(u)}
+                className="px-3 py-1.5 text-xs sm:text-sm border-2 transition-all"
+                style={{
+                  fontFamily: "'Fraunces', serif", fontWeight: 600,
+                  borderColor: activeUnit === u ? COLORS.navy : COLORS.navy + '30',
+                  backgroundColor: activeUnit === u ? COLORS.navy : 'transparent',
+                  color: activeUnit === u ? '#fff8e8' : COLORS.navy,
+                }}>
+                <span className="text-[10px] opacity-70 mr-1.5" style={{ fontFamily: "'JetBrains Mono', monospace" }}>U{u}</span>
+                {UNIT_NAMES[u]}
+              </button>
+            ))}
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {unitTerms.map((t) => {
+              const id = `u${t.unit}-${t.term}`;
+              const status = progress[id];
+              return (
+                <div key={id} className="p-4 border transition-all"
+                  style={{ borderColor: status === 'mastered' ? COLORS.brick : COLORS.navy + '40', backgroundColor: status === 'mastered' ? '#fff8e8' : '#fdfaf0' }}>
+                  <div className="flex justify-between items-start gap-3">
+                    <div className="text-base leading-snug" style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, color: COLORS.navy }}>{t.term}</div>
+                    <button onClick={() => onUpdate(id, status === 'mastered' ? null : 'mastered')}
+                      className="shrink-0 p-1.5 border"
+                      style={{
+                        borderColor: status === 'mastered' ? COLORS.brick : COLORS.navy + '40',
+                        backgroundColor: status === 'mastered' ? COLORS.brick : 'transparent',
+                        color: status === 'mastered' ? '#fff8e8' : COLORS.navy,
+                      }}>
+                      <Check size={12} />
+                    </button>
+                  </div>
+                  <p className="mt-1.5 text-sm leading-relaxed" style={{ fontFamily: "'Fraunces', serif", color: COLORS.navy + 'dd' }}>{t.def}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================
+    // DRILL HUB
+    // =========================================================
+    function DrillHub({ sub, setSub, stats, updateStats, addXP }) {
+      const subs = [
+        { id: 'speed', label: 'Speed', icon: Zap },
+        { id: 'compare', label: 'Compare', icon: Scale },
+        { id: 'apply', label: 'Apply', icon: Target },
+        { id: 'frq', label: 'FRQ', icon: PenLine },
+      ];
+      return (
+        <div className="pt-6">
+          <SubNav items={subs} active={sub} onChange={setSub} />
+          {sub === 'speed' && <SpeedRound stats={stats} updateStats={updateStats} addXP={addXP} />}
+          {sub === 'compare' && <CompareGame addXP={addXP} />}
+          {sub === 'apply' && <ApplyGame addXP={addXP} />}
+          {sub === 'frq' && <FRQPractice addXP={addXP} />}
+        </div>
+      );
+    }
+
+    // =========================================================
+    // SPEED ROUND
+    // =========================================================
+    function SpeedRound({ stats, updateStats, addXP }) {
+      const [phase, setPhase] = useState('intro');
+      const [questions, setQuestions] = useState([]);
+      const [idx, setIdx] = useState(0);
+      const [lives, setLives] = useState(3);
+      const [score, setScore] = useState(0);
+      const [combo, setCombo] = useState(0);
+      const [topCombo, setTopCombo] = useState(0);
+      const [timeLeft, setTimeLeft] = useState(15);
+      const [selected, setSelected] = useState(null);
+      const [feedback, setFeedback] = useState(null);
+      const timerRef = useRef(null);
+      const start = () => {
+        setQuestions([...SPEED_QUESTIONS].sort(() => Math.random() - 0.5));
+        setIdx(0); setLives(3); setScore(0); setCombo(0); setTopCombo(0);
+        setTimeLeft(15); setSelected(null); setFeedback(null);
+        setPhase('playing');
+      };
+      useEffect(() => {
+        if (phase !== 'playing') return;
+        if (timerRef.current) clearInterval(timerRef.current);
+        timerRef.current = setInterval(() => {
+          setTimeLeft(t => {
+            if (t <= 0.1) return 0;
+            return +(t - 0.1).toFixed(1);
+          });
+        }, 100);
+        return () => clearInterval(timerRef.current);
+      }, [phase, idx]);
+      useEffect(() => {
+        if (phase === 'playing' && timeLeft <= 0 && selected === null) {
+          handleAnswer(-1);
+        }
+      }, [timeLeft]);
+      const handleAnswer = (i) => {
+        if (selected !== null || phase !== 'playing') return;
+        const q = questions[idx];
+        const isRight = i === q.correct;
+        setSelected(i);
+        setFeedback(isRight ? 'right' : 'wrong');
+        if (isRight) {
+          const newCombo = combo + 1;
+          const mult = 1 + Math.floor(newCombo / 3) * 0.5;
+          const points = Math.round(10 * mult * (timeLeft / 15 + 0.5));
+          setCombo(newCombo);
+          setTopCombo(c => Math.max(c, newCombo));
+          setScore(s => s + points);
+        } else {
+          setCombo(0);
+          setLives(l => l - 1);
+        }
+        setTimeout(() => {
+          const newLives = isRight ? lives : lives - 1;
+          const isLastQ = idx + 1 >= questions.length;
+          if (newLives <= 0 || isLastQ) {
+            finish(isRight ? score + Math.round(10 * (1 + Math.floor((combo + 1) / 3) * 0.5) * (timeLeft / 15 + 0.5)) : score, Math.max(topCombo, isRight ? combo + 1 : combo));
+          } else {
+            setIdx(i => i + 1);
+            setSelected(null);
+            setFeedback(null);
+            setTimeLeft(15);
+          }
+        }, 800);
+      };
+      const finish = (finalScore, finalCombo) => {
+        setPhase('over');
+        const patch = {};
+        if (finalScore > (stats.speedBest || 0)) patch.speedBest = finalScore;
+        if (finalCombo > (stats.comboBest || 0)) patch.comboBest = finalCombo;
+        let badge = null;
+        if (!stats.badges?.firstSpeed) badge = 'firstSpeed';
+        else if (finalCombo >= 10 && !stats.badges?.combo10) badge = 'combo10';
+        else if (lives === 3 && finalScore > 0 && !stats.badges?.perfectSpeed) badge = 'perfectSpeed';
+        updateStats(patch, badge);
+        addXP(Math.floor(finalScore / 10));
+      };
+      if (phase === 'intro') {
+        return (
+          <div className="text-center py-12">
+            <Zap size={56} className="mx-auto mb-3" style={{ color: COLORS.brick }} />
+            <h2 className="text-4xl sm:text-5xl" style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: COLORS.navy, letterSpacing: '-0.03em' }}>
+              Speed Round
+            </h2>
+            <p className="mt-3 max-w-md mx-auto" style={{ fontFamily: "'Fraunces', serif", fontSize: '1.05rem' }}>
+              25 quick questions. <strong>15 seconds each.</strong> 3 lives. Build combos for score multipliers.
+            </p>
+            <div className="mt-6 grid grid-cols-3 gap-3 max-w-md mx-auto text-xs" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+              <div className="border p-3" style={{ borderColor: COLORS.navy + '40' }}>
+                <div className="opacity-60">Best Score</div>
+                <div className="text-xl mt-0.5" style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, color: COLORS.brick }}>{stats.speedBest || 0}</div>
+              </div>
+              <div className="border p-3" style={{ borderColor: COLORS.navy + '40' }}>
+                <div className="opacity-60">Top Combo</div>
+                <div className="text-xl mt-0.5" style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, color: COLORS.gold }}>{stats.comboBest || 0}x</div>
+              </div>
+              <div className="border p-3" style={{ borderColor: COLORS.navy + '40' }}>
+                <div className="opacity-60">Mult/3</div>
+                <div className="text-xl mt-0.5" style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, color: COLORS.navy }}>+0.5x</div>
+              </div>
+            </div>
+            <button onClick={start}
+              className="mt-8 px-7 py-3.5 inline-flex items-center gap-2 transition-transform hover:scale-105"
+              style={{ backgroundColor: COLORS.brick, color: '#fff8e8', fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: '1.05rem' }}>
+              <Zap size={18} /> Start Round
+            </button>
+          </div>
+        );
+      }
+      if (phase === 'over') {
+        return (
+          <div className="text-center py-12">
+            <div className="text-xs uppercase tracking-[0.25em]" style={{ color: COLORS.brick, fontFamily: "'JetBrains Mono', monospace" }}>
+              {lives <= 0 ? 'Eliminated' : 'Run Complete'}
+            </div>
+            {lives <= 0 && <Skull size={48} className="mx-auto mt-3" style={{ color: COLORS.brick }} />}
+            <div className="text-7xl sm:text-8xl mt-4" style={{ fontFamily: "'Fraunces', serif", fontWeight: 900, color: COLORS.navy, letterSpacing: '-0.04em' }}>
+              {score}
+            </div>
+            <div className="mt-1 text-sm opacity-70" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+              Top combo: {topCombo}x
+            </div>
+            {score > (stats.speedBest || 0) && (
+              <div className="mt-3 inline-block px-3 py-1.5 text-xs" style={{ backgroundColor: COLORS.gold, color: COLORS.navy, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}>
+                ★ NEW HIGH SCORE
+              </div>
+            )}
+            <div className="mt-2 text-sm" style={{ fontFamily: "'Fraunces', serif", color: COLORS.brick }}>
+              +{Math.floor(score / 10)} XP
+            </div>
+            <button onClick={start}
+              className="mt-8 px-6 py-3 inline-flex items-center gap-2"
+              style={{ backgroundColor: COLORS.navy, color: '#fff8e8', fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
+              <RotateCcw size={16} /> Play Again
+            </button>
+          </div>
+        );
+      }
+      const q = questions[idx];
+      const mult = 1 + Math.floor(combo / 3) * 0.5;
+      const lowTime = timeLeft <= 5;
+      return (
+        <div className="max-w-2xl mx-auto">
+          <div className="grid grid-cols-3 gap-2 mb-4 text-xs" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+            <div className="border-2 p-2.5" style={{ borderColor: COLORS.navy }}>
+              <div className="opacity-60 text-[10px] uppercase">Lives</div>
+              <div className="flex gap-1 mt-1">
+                {[0, 1, 2].map(i => (
+                  <Heart key={i} size={16} fill={i < lives ? COLORS.brick : 'none'} style={{ color: COLORS.brick }} />
+                ))}
+              </div>
+            </div>
+            <div className="border-2 p-2.5" style={{ borderColor: combo >= 3 ? COLORS.gold : COLORS.navy + '40' }}>
+              <div className="opacity-60 text-[10px] uppercase">Combo</div>
+              <div className="text-xl mt-0.5" style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: combo >= 3 ? COLORS.gold : COLORS.navy }}>
+                {combo}x {combo >= 3 && <span className="text-[10px]" style={{ color: COLORS.brick }}>·{mult}x mult</span>}
+              </div>
+            </div>
+            <div className="border-2 p-2.5" style={{ borderColor: COLORS.navy }}>
+              <div className="opacity-60 text-[10px] uppercase">Score</div>
+              <div className="text-xl mt-0.5" style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: COLORS.navy }}>{score}</div>
+            </div>
+          </div>
+          <div className="h-2 mb-4 relative overflow-hidden" style={{ backgroundColor: COLORS.navy + '20' }}>
+            <div className="h-full transition-all" style={{ width: (timeLeft / 15 * 100) + '%', backgroundColor: lowTime ? COLORS.brick : COLORS.gold }} />
+          </div>
+          <div className="border-2 p-6 sm:p-8 transition-all"
+            style={{
+              borderColor: feedback === 'right' ? COLORS.navy : feedback === 'wrong' ? COLORS.brick : COLORS.navy,
+              backgroundColor: feedback === 'right' ? '#e8f0e0' : feedback === 'wrong' ? '#fff0ec' : '#fdfaf0',
+              boxShadow: '5px 5px 0 ' + (feedback === 'wrong' ? COLORS.brick : COLORS.navy),
+            }}>
+            <div className="flex items-baseline justify-between text-xs mb-3" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+              <span style={{ color: COLORS.brick }}>QUESTION {idx + 1} / {questions.length}</span>
+              <span style={{ color: lowTime ? COLORS.brick : COLORS.navy + 'aa', fontWeight: 700 }}>{timeLeft.toFixed(1)}s</span>
+            </div>
+            <p className="text-xl sm:text-2xl leading-snug" style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, color: COLORS.navy }}>
+              {q.q}
+            </p>
+            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {q.options.map((opt, i) => {
+                let bg = '#fff8e8', border = COLORS.navy + '40', color = COLORS.navy;
+                const isSelected = selected === i;
+                const isCorrect = i === q.correct;
+                if (selected !== null && isCorrect) { border = COLORS.navy; bg = '#d8e6c8'; }
+                else if (selected !== null && isSelected && !isCorrect) { border = COLORS.brick; bg = '#fdd6d0'; color = COLORS.brick; }
+                return (
+                  <button key={i} onClick={() => handleAnswer(i)} disabled={selected !== null}
+                    className="text-left p-3 border-2 transition-all flex gap-3 items-start text-sm"
+                    style={{ borderColor: border, backgroundColor: bg, color, fontFamily: "'Fraunces', serif", cursor: selected !== null ? 'default' : 'pointer' }}>
+                    <span className="text-xs mt-0.5 opacity-60" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{String.fromCharCode(65 + i)}</span>
+                    <span className="flex-1">{opt}</span>
+                    {selected !== null && isCorrect && <Check size={16} />}
+                    {selected !== null && isSelected && !isCorrect && <XIcon size={16} />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================
+    // SCOTUS COMPARE
+    // =========================================================
+    function CompareGame({ addXP }) {
+      const [questions] = useState(() => [...COMPARISONS].sort(() => Math.random() - 0.5).slice(0, 8));
+      const [idx, setIdx] = useState(0);
+      const [selected, setSelected] = useState(null);
+      const [score, setScore] = useState(0);
+      const [done, setDone] = useState(false);
+      const q = questions[idx];
+      const caseLookup = (id) => CASES.find(c => c.id === id);
+      const submit = (id) => {
+        if (selected !== null) return;
+        setSelected(id);
+        if (id === q.correct) setScore(s => s + 1);
+      };
+      const advance = () => {
+        if (idx + 1 >= questions.length) { setDone(true); addXP(score * 5); }
+        else { setIdx(idx + 1); setSelected(null); }
+      };
+      if (done) {
+        const pct = Math.round(score / questions.length * 100);
+        return (
+          <div className="text-center py-12">
+            <Scale size={48} className="mx-auto mb-3" style={{ color: COLORS.navy }} />
+            <div className="text-7xl" style={{ fontFamily: "'Fraunces', serif", fontWeight: 900, color: COLORS.navy }}>
+              {score}<span className="text-3xl opacity-50">/{questions.length}</span>
+            </div>
+            <div className="mt-1 text-2xl italic" style={{ fontFamily: "'Fraunces', serif", color: COLORS.brick }}>
+              {pct >= 87 ? 'Bench-ready.' : pct >= 62 ? 'Studied counsel.' : 'Back to chambers.'}
+            </div>
+            <div className="mt-2 text-sm" style={{ fontFamily: "'Fraunces', serif", color: COLORS.brick }}>+{score * 5} XP</div>
+            <button onClick={() => window.location.reload()}
+              className="mt-6 px-5 py-2.5 inline-flex items-center gap-2"
+              style={{ backgroundColor: COLORS.navy, color: '#fff8e8', fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
+              <RotateCcw size={16} /> New Round
+            </button>
+          </div>
+        );
+      }
+      return (
+        <div className="max-w-3xl mx-auto">
+          <div className="flex justify-between items-baseline mb-4">
+            <div>
+              <div className="text-xs uppercase tracking-[0.25em]" style={{ color: COLORS.brick, fontFamily: "'JetBrains Mono', monospace" }}>
+                SCOTUS Comparison · {idx + 1} / {questions.length}
+              </div>
+              <h2 className="text-2xl sm:text-3xl mt-1" style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: COLORS.navy, letterSpacing: '-0.02em' }}>
+                Which case is the closest precedent?
+              </h2>
+            </div>
+            <div className="text-xs" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Score: {score}</div>
+          </div>
+          <div className="border-l-4 p-5 mb-5" style={{ borderColor: COLORS.gold, backgroundColor: '#fff8e8' }}>
+            <div className="text-[10px] uppercase tracking-[0.2em] mb-2" style={{ color: COLORS.brick, fontFamily: "'JetBrains Mono', monospace" }}>
+              Hypothetical Scenario
+            </div>
+            <p className="text-base sm:text-lg leading-relaxed" style={{ fontFamily: "'Fraunces', serif", color: COLORS.navy }}>
+              {q.scenario}
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {q.options.map(id => {
+              const c = caseLookup(id);
+              const isSelected = selected === id;
+              const isCorrect = q.correct === id;
+              let border = COLORS.navy + '40', bg = '#fdfaf0';
+              if (selected && isCorrect) { border = COLORS.navy; bg = '#d8e6c8'; }
+              else if (selected && isSelected && !isCorrect) { border = COLORS.brick; bg = '#fdd6d0'; }
+              return (
+                <button key={id} onClick={() => submit(id)} disabled={selected !== null}
+                  className="text-left p-4 border-2 transition-all"
+                  style={{ borderColor: border, backgroundColor: bg, cursor: selected !== null ? 'default' : 'pointer' }}>
+                  <div className="text-base" style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, color: COLORS.navy }}>
+                    {c.name}
+                  </div>
+                  <div className="text-[11px] mt-0.5 opacity-60" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                    {c.year}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          {selected && (
+            <>
+              <div className="mt-5 p-5 border-l-4" style={{ borderColor: selected === q.correct ? COLORS.navy : COLORS.brick, backgroundColor: '#fff0ec55' }}>
+                <div className="text-[10px] uppercase tracking-[0.2em] mb-1.5" style={{ color: COLORS.brick, fontFamily: "'JetBrains Mono', monospace" }}>
+                  {selected === q.correct ? 'Correct' : 'Closest precedent: ' + caseLookup(q.correct).name}
+                </div>
+                <p className="text-sm leading-relaxed" style={{ fontFamily: "'Fraunces', serif", color: COLORS.navy }}>
+                  {q.explain}
+                </p>
+              </div>
+              <div className="mt-5 flex justify-end">
+                <button onClick={advance}
+                  className="px-6 py-3 flex items-center gap-2"
+                  style={{ backgroundColor: COLORS.navy, color: '#fff8e8', fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
+                  {idx + 1 >= questions.length ? 'See Results' : 'Next'} <ArrowRight size={16} />
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      );
+    }
+
+    // =========================================================
+    // APPLY GAME
+    // =========================================================
+    function ApplyGame({ addXP }) {
+      const [questions] = useState(() => [...APPLICATIONS].sort(() => Math.random() - 0.5).slice(0, 8));
+      const [idx, setIdx] = useState(0);
+      const [selected, setSelected] = useState(null);
+      const [score, setScore] = useState(0);
+      const [done, setDone] = useState(false);
+      const q = questions[idx];
+      const submit = (i) => { if (selected !== null) return; setSelected(i); if (i === q.correct) setScore(s => s + 1); };
+      const advance = () => {
+        if (idx + 1 >= questions.length) { setDone(true); addXP(score * 5); }
+        else { setIdx(idx + 1); setSelected(null); }
+      };
+      if (done) {
+        const pct = Math.round(score / questions.length * 100);
+        return (
+          <div className="text-center py-12">
+            <Target size={48} className="mx-auto mb-3" style={{ color: COLORS.navy }} />
+            <div className="text-7xl" style={{ fontFamily: "'Fraunces', serif", fontWeight: 900, color: COLORS.navy }}>
+              {score}<span className="text-3xl opacity-50">/{questions.length}</span>
+            </div>
+            <div className="mt-1 text-2xl italic" style={{ fontFamily: "'Fraunces', serif", color: COLORS.brick }}>
+              {pct >= 87 ? 'Sharp application.' : pct >= 62 ? 'Solid grasp.' : 'Review the concepts.'}
+            </div>
+            <div className="mt-2 text-sm" style={{ fontFamily: "'Fraunces', serif", color: COLORS.brick }}>+{score * 5} XP</div>
+            <button onClick={() => window.location.reload()}
+              className="mt-6 px-5 py-2.5 inline-flex items-center gap-2"
+              style={{ backgroundColor: COLORS.navy, color: '#fff8e8', fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
+              <RotateCcw size={16} /> New Round
+            </button>
+          </div>
+        );
+      }
+      return (
+        <div className="max-w-3xl mx-auto">
+          <div className="flex justify-between items-baseline mb-4">
+            <div>
+              <div className="text-xs uppercase tracking-[0.25em]" style={{ color: COLORS.brick, fontFamily: "'JetBrains Mono', monospace" }}>
+                Apply It · {idx + 1} / {questions.length}
+              </div>
+              <h2 className="text-2xl sm:text-3xl mt-1" style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: COLORS.navy, letterSpacing: '-0.02em' }}>
+                Apply the concept.
+              </h2>
+            </div>
+            <div className="text-xs" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Score: {score}</div>
+          </div>
+          <div className="border-2 p-5 mb-5" style={{ borderColor: COLORS.navy, backgroundColor: '#fdfaf0' }}>
+            <div className="text-[10px] uppercase tracking-[0.2em] mb-2" style={{ color: COLORS.brick, fontFamily: "'JetBrains Mono', monospace" }}>Scenario</div>
+            <p className="text-base leading-relaxed" style={{ fontFamily: "'Fraunces', serif", color: COLORS.navy }}>
+              {q.scenario}
+            </p>
+            <div className="mt-4 pt-4 border-t" style={{ borderColor: COLORS.navy + '30' }}>
+              <p className="text-base sm:text-lg leading-snug" style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, color: COLORS.navy }}>
+                {q.q}
+              </p>
+            </div>
+          </div>
+          <div className="space-y-2.5">
+            {q.options.map((opt, i) => {
+              let border = COLORS.navy + '40', bg = '#fff8e8', color = COLORS.navy;
+              const isSelected = selected === i;
+              const isCorrect = i === q.correct;
+              if (selected !== null && isCorrect) { border = COLORS.navy; bg = '#d8e6c8'; }
+              else if (selected !== null && isSelected && !isCorrect) { border = COLORS.brick; bg = '#fdd6d0'; color = COLORS.brick; }
+              return (
+                <button key={i} onClick={() => submit(i)} disabled={selected !== null}
+                  className="w-full text-left p-3.5 border-2 transition-all flex gap-3 items-start"
+                  style={{ borderColor: border, backgroundColor: bg, color, cursor: selected !== null ? 'default' : 'pointer' }}>
+                  <span className="text-xs mt-0.5 opacity-60" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{String.fromCharCode(65 + i)}</span>
+                  <span className="flex-1 text-sm" style={{ fontFamily: "'Fraunces', serif" }}>{opt}</span>
+                  {selected !== null && isCorrect && <Check size={16} />}
+                  {selected !== null && isSelected && !isCorrect && <XIcon size={16} />}
+                </button>
+              );
+            })}
+          </div>
+          {selected !== null && (
+            <>
+              <div className="mt-5 p-4 border-l-4" style={{ borderColor: COLORS.brick, backgroundColor: '#fff0ec55' }}>
+                <div className="text-[10px] uppercase tracking-[0.2em] mb-1" style={{ color: COLORS.brick, fontFamily: "'JetBrains Mono', monospace" }}>Explanation</div>
+                <p className="text-sm leading-relaxed" style={{ fontFamily: "'Fraunces', serif", color: COLORS.navy }}>{q.explain}</p>
+              </div>
+              <div className="mt-5 flex justify-end">
+                <button onClick={advance}
+                  className="px-6 py-3 flex items-center gap-2"
+                  style={{ backgroundColor: COLORS.navy, color: '#fff8e8', fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
+                  {idx + 1 >= questions.length ? 'See Results' : 'Next'} <ArrowRight size={16} />
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      );
+    }
+
+    // =========================================================
+    // FRQ PRACTICE
+    // =========================================================
+    function FRQPractice({ addXP }) {
+      const [promptIdx, setPromptIdx] = useState(0);
+      const [text, setText] = useState('');
+      const [submitted, setSubmitted] = useState(false);
+      const [scored, setScored] = useState({});
+      const [showRubric, setShowRubric] = useState(false);
+      const prompt = FRQ_PROMPTS[promptIdx];
+      const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+      const totalPoints = Object.values(scored).filter(Boolean).length;
+      const maxPoints = prompt.rubric.length;
+      const submit = () => { setSubmitted(true); setShowRubric(true); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+      const grade = (id, val) => {
+        const next = { ...scored, [id]: val };
+        setScored(next);
+        if (Object.keys(next).length === maxPoints) {
+          addXP(Object.values(next).filter(Boolean).length * 3);
+        }
+      };
+      const reset = () => {
+        setPromptIdx((promptIdx + 1) % FRQ_PROMPTS.length);
+        setText(''); setSubmitted(false); setScored({}); setShowRubric(false);
+      };
+      return (
+        <div className="max-w-3xl mx-auto">
+          <div className="flex justify-between items-baseline mb-4">
+            <div>
+              <div className="text-xs uppercase tracking-[0.25em]" style={{ color: COLORS.brick, fontFamily: "'JetBrains Mono', monospace" }}>
+                FRQ · Argument Essay
+              </div>
+              <h2 className="text-2xl sm:text-3xl mt-1" style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: COLORS.navy, letterSpacing: '-0.02em' }}>
+                {prompt.title}.
+              </h2>
+            </div>
+            <button onClick={reset} className="text-xs px-3 py-1.5 border" style={{ borderColor: COLORS.navy + '40', fontFamily: "'JetBrains Mono', monospace", color: COLORS.navy }}>
+              New Prompt
+            </button>
+          </div>
+          <div className="border-2 p-5 mb-4" style={{ borderColor: COLORS.navy, backgroundColor: '#fdfaf0' }}>
+            <div className="text-[10px] uppercase tracking-[0.2em] mb-2" style={{ color: COLORS.brick, fontFamily: "'JetBrains Mono', monospace" }}>Prompt</div>
+            <p className="text-base leading-relaxed" style={{ fontFamily: "'Fraunces', serif", color: COLORS.navy, fontWeight: 600 }}>
+              {prompt.prompt}
+            </p>
+            <p className="text-sm mt-3 italic opacity-80" style={{ fontFamily: "'Fraunces', serif" }}>
+              {prompt.instructions}
+            </p>
+            <div className="mt-3 pt-3 border-t flex flex-wrap gap-1.5" style={{ borderColor: COLORS.navy + '30' }}>
+              <span className="text-[10px] uppercase tracking-wider opacity-60 mr-2" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Recommended docs:</span>
+              {prompt.documents.map(id => {
+                const d = DOCS.find(x => x.id === id);
+                return (
+                  <span key={id} className="text-[10px] px-2 py-0.5 border" style={{ borderColor: COLORS.gold, color: COLORS.navy, fontFamily: "'JetBrains Mono', monospace" }}>
+                    {d?.name || id}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+          <textarea value={text} onChange={(e) => setText(e.target.value)} disabled={submitted}
+            placeholder="Begin your argument here. Aim for at least 4 paragraphs: thesis, evidence (1), evidence (2), refutation/concession."
+            className="w-full p-4 border-2 outline-none resize-y min-h-[280px]"
+            style={{ borderColor: submitted ? COLORS.navy + '40' : COLORS.navy, backgroundColor: '#fff8e8', fontFamily: "'Fraunces', serif", fontSize: '1rem', lineHeight: 1.6, color: COLORS.navy }} />
+          <div className="flex justify-between items-center mt-2 text-xs" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+            <span className="opacity-60">{wordCount} words {wordCount < 200 && !submitted && '· aim for 300+'}</span>
+            {!submitted ? (
+              <button onClick={submit} disabled={wordCount < 50}
+                className="px-5 py-2.5 disabled:opacity-40"
+                style={{ backgroundColor: COLORS.brick, color: '#fff8e8', fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
+                Submit for self-grading
+              </button>
+            ) : (
+              <span style={{ color: COLORS.brick, fontWeight: 700 }}>Submitted ·  Grade yourself below</span>
+            )}
+          </div>
+          {showRubric && (
+            <div className="mt-6 border-2 p-5" style={{ borderColor: COLORS.gold, backgroundColor: '#fff8e8' }}>
+              <div className="flex justify-between items-baseline mb-4">
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.2em]" style={{ color: COLORS.brick, fontFamily: "'JetBrains Mono', monospace" }}>Self-Grade Rubric</div>
+                  <div className="text-xl mt-0.5" style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, color: COLORS.navy }}>
+                    Be honest. The exam graders will be.
+                  </div>
+                </div>
+                <div className="text-3xl" style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: COLORS.brick }}>
+                  {totalPoints}<span className="text-base opacity-50">/{maxPoints}</span>
+                </div>
+              </div>
+              <div className="space-y-2.5">
+                {prompt.rubric.map(r => {
+                  const v = scored[r.id];
+                  return (
+                    <div key={r.id} className="flex items-start gap-3 p-3 border" style={{ borderColor: v === true ? COLORS.navy : v === false ? COLORS.brick : COLORS.navy + '30', backgroundColor: '#fdfaf0' }}>
+                      <p className="flex-1 text-sm leading-snug" style={{ fontFamily: "'Fraunces', serif" }}>{r.label}</p>
+                      <div className="flex gap-1.5">
+                        <button onClick={() => grade(r.id, true)}
+                          className="p-1.5 border-2"
+                          style={{ borderColor: v === true ? COLORS.navy : COLORS.navy + '40', backgroundColor: v === true ? COLORS.navy : 'transparent', color: v === true ? '#fff8e8' : COLORS.navy }}>
+                          <Check size={14} />
+                        </button>
+                        <button onClick={() => grade(r.id, false)}
+                          className="p-1.5 border-2"
+                          style={{ borderColor: v === false ? COLORS.brick : COLORS.navy + '40', backgroundColor: v === false ? COLORS.brick : 'transparent', color: v === false ? '#fff8e8' : COLORS.navy }}>
+                          <XIcon size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {Object.keys(scored).length === maxPoints && (
+                <div className="mt-4 p-3 text-center" style={{ backgroundColor: COLORS.navy, color: '#fff8e8' }}>
+                  <div className="text-xs" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                    +{totalPoints * 3} XP earned
+                  </div>
+                  <div className="text-base mt-1" style={{ fontFamily: "'Fraunces', serif" }}>
+                    {totalPoints === maxPoints ? 'Perfect rubric. You wrote a solid argument.' :
+                     totalPoints >= 4 ? 'Strong essay. Tighten the gaps and try a new prompt.' :
+                     'Review the missing elements before the next attempt.'}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // =========================================================
+    // FINAL EXAM (BOSS MODE)
+    // =========================================================
+    function BossMode({ stats, updateStats, addXP }) {
+      const [phase, setPhase] = useState('intro');
+      const [questions, setQuestions] = useState([]);
+      const [idx, setIdx] = useState(0);
+      const [answers, setAnswers] = useState([]);
+      const [selected, setSelected] = useState(null);
+      const [timeLeft, setTimeLeft] = useState(8 * 60);
+      const timerRef = useRef(null);
+      const buildExam = () => {
+        const mcq = [...HARD_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 10).map(q => ({ kind: 'mcq', ...q }));
+        const cmp = [...COMPARISONS].sort(() => Math.random() - 0.5).slice(0, 5).map(q => ({
+          kind: 'cmp',
+          q: q.scenario + '\n\nWhich required case is the closest precedent?',
+          options: q.options.map(id => CASES.find(c => c.id === id).name),
+          correctIds: q.options,
+          correct: q.options.indexOf(q.correct),
+          explain: q.explain,
+        }));
+        const apl = [...APPLICATIONS].sort(() => Math.random() - 0.5).slice(0, 5).map(q => ({
+          kind: 'apl',
+          q: q.scenario + '\n\n' + q.q,
+          options: q.options,
+          correct: q.correct,
+          explain: q.explain,
+        }));
+        return [...mcq, ...cmp, ...apl].sort(() => Math.random() - 0.5);
+      };
+      const start = () => {
+        setQuestions(buildExam());
+        setIdx(0); setAnswers([]); setSelected(null); setTimeLeft(8 * 60);
+        setPhase('playing');
+      };
+      useEffect(() => {
+        if (phase !== 'playing') return;
+        if (timerRef.current) clearInterval(timerRef.current);
+        timerRef.current = setInterval(() => {
+          setTimeLeft(t => {
+            if (t <= 1) { finish(answers); return 0; }
+            return t - 1;
+          });
+        }, 1000);
+        return () => clearInterval(timerRef.current);
+      }, [phase]);
+      const submitAnswer = (i) => { if (selected !== null) return; setSelected(i); };
+      const advance = () => {
+        const q = questions[idx];
+        const correct = selected === q.correct;
+        const next = [...answers, { idx, picked: selected, correct, q }];
+        setAnswers(next);
+        if (idx + 1 >= questions.length) finish(next);
+        else { setIdx(idx + 1); setSelected(null); }
+      };
+      const finish = (finalAnswers) => {
+        if (timerRef.current) clearInterval(timerRef.current);
+        const correct = finalAnswers.filter(a => a.correct).length;
+        const score = Math.round(correct / questions.length * 100);
+        const patch = { bossAttempts: (stats.bossAttempts || 0) + 1, bossLast: score };
+        if (score > (stats.bossBest || 0)) patch.bossBest = score;
+        let badge = null;
+        if (score >= 70 && !stats.badges?.finalPass) badge = 'finalPass';
+        else if (score >= 90 && !stats.badges?.finalAce) badge = 'finalAce';
+        updateStats(patch, badge);
+        addXP(score);
+        setPhase('over');
+      };
+      if (phase === 'intro') {
+        return (
+          <div className="text-center py-12">
+            <Crown size={56} className="mx-auto mb-3" style={{ color: COLORS.brick }} />
+            <h2 className="text-4xl sm:text-6xl" style={{ fontFamily: "'Fraunces', serif", fontWeight: 900, color: COLORS.navy, letterSpacing: '-0.04em' }}>
+              The Final Exam
+            </h2>
+            <p className="mt-3 max-w-md mx-auto" style={{ fontFamily: "'Fraunces', serif", fontSize: '1.05rem' }}>
+              20 questions. 8-minute timer. Mixed format: hard MCQ, SCOTUS comparison, scenario application. <strong>No skipping.</strong>
+            </p>
+            <div className="mt-6 grid grid-cols-2 gap-3 max-w-sm mx-auto text-xs" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+              <div className="border p-3" style={{ borderColor: COLORS.navy + '40' }}>
+                <div className="opacity-60">Best Score</div>
+                <div className="text-2xl mt-0.5" style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, color: COLORS.brick }}>{stats.bossBest ? stats.bossBest + '%' : '—'}</div>
+              </div>
+              <div className="border p-3" style={{ borderColor: COLORS.navy + '40' }}>
+                <div className="opacity-60">Attempts</div>
+                <div className="text-2xl mt-0.5" style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, color: COLORS.navy }}>{stats.bossAttempts || 0}</div>
+              </div>
+            </div>
+            <button onClick={start}
+              className="mt-8 px-7 py-3.5 inline-flex items-center gap-2 transition-transform hover:scale-105"
+              style={{ backgroundColor: COLORS.brick, color: '#fff8e8', fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: '1.05rem' }}>
+              <Crown size={18} /> Begin
+            </button>
+          </div>
+        );
+      }
+      if (phase === 'over') {
+        const correct = answers.filter(a => a.correct).length;
+        const score = Math.round(correct / questions.length * 100);
+        return (
+          <div className="py-8">
+            <div className="text-center mb-8">
+              <div className="text-xs uppercase tracking-[0.25em]" style={{ color: COLORS.brick, fontFamily: "'JetBrains Mono', monospace" }}>
+                Final Result
+              </div>
+              <div className="text-8xl sm:text-9xl mt-2" style={{ fontFamily: "'Fraunces', serif", fontWeight: 900, color: COLORS.navy, letterSpacing: '-0.05em' }}>
+                {score}<span style={{ color: COLORS.brick }}>%</span>
+              </div>
+              <div className="mt-1 text-2xl italic" style={{ fontFamily: "'Fraunces', serif", color: COLORS.brick }}>
+                {score >= 90 ? 'Constitutional scholar.' : score >= 75 ? 'Likely 4 or 5.' : score >= 60 ? 'Solid 3 territory.' : 'More study needed.'}
+              </div>
+              <div className="text-sm mt-1 opacity-70" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                {correct} / {questions.length} correct · +{score} XP
+              </div>
+              {score > (stats.bossBest || 0) && (
+                <div className="mt-3 inline-block px-3 py-1.5 text-xs" style={{ backgroundColor: COLORS.gold, color: COLORS.navy, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}>
+                  ★ NEW HIGH SCORE
+                </div>
+              )}
+            </div>
+            <div className="max-w-3xl mx-auto space-y-3">
+              {answers.map((a, i) => (
+                <div key={i} className="p-4 border-l-4 text-sm"
+                  style={{ borderColor: a.correct ? COLORS.navy : COLORS.brick, backgroundColor: a.correct ? '#fdfaf0' : '#fff0ec' }}>
+                  <div className="flex items-start gap-3">
+                    <span className="text-xs mt-0.5" style={{ fontFamily: "'JetBrains Mono', monospace", color: a.correct ? COLORS.navy : COLORS.brick }}>
+                      {a.correct ? '✓' : '✕'}
+                    </span>
+                    <div className="flex-1">
+                      <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, color: COLORS.navy, whiteSpace: 'pre-wrap' }}>{a.q.q}</div>
+                      {!a.correct && (
+                        <div className="mt-1.5 text-xs" style={{ fontFamily: "'Fraunces', serif" }}>
+                          <span style={{ color: COLORS.brick }}>Correct: </span>
+                          {a.q.options[a.q.correct]}
+                        </div>
+                      )}
+                      <div className="mt-1.5 italic text-xs opacity-80" style={{ fontFamily: "'Fraunces', serif" }}>{a.q.explain}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="text-center mt-6">
+              <button onClick={start}
+                className="px-6 py-3 inline-flex items-center gap-2"
+                style={{ backgroundColor: COLORS.navy, color: '#fff8e8', fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
+                <RotateCcw size={16} /> Retry
+              </button>
+            </div>
+          </div>
+        );
+      }
+      const q = questions[idx];
+      const mins = Math.floor(timeLeft / 60);
+      const secs = timeLeft % 60;
+      const lowTime = timeLeft < 60;
+      const correctSoFar = answers.filter(a => a.correct).length;
+      return (
+        <div className="max-w-3xl mx-auto pt-2">
+          <div className="grid grid-cols-3 gap-2 mb-3 text-xs" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+            <div className="border-2 p-2.5" style={{ borderColor: COLORS.navy }}>
+              <div className="opacity-60 text-[10px] uppercase">Question</div>
+              <div className="text-lg mt-0.5" style={{ fontFamily: "'Fraunces', serif", fontWeight: 700 }}>{idx + 1} / {questions.length}</div>
+            </div>
+            <div className="border-2 p-2.5" style={{ borderColor: lowTime ? COLORS.brick : COLORS.navy }}>
+              <div className="opacity-60 text-[10px] uppercase">Time</div>
+              <div className="text-lg mt-0.5" style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, color: lowTime ? COLORS.brick : COLORS.navy }}>
+                {mins}:{secs.toString().padStart(2, '0')}
+              </div>
+            </div>
+            <div className="border-2 p-2.5" style={{ borderColor: COLORS.navy }}>
+              <div className="opacity-60 text-[10px] uppercase">Correct</div>
+              <div className="text-lg mt-0.5" style={{ fontFamily: "'Fraunces', serif", fontWeight: 700 }}>{correctSoFar}</div>
+            </div>
+          </div>
+          <div className="h-1 mb-4" style={{ backgroundColor: COLORS.navy + '20' }}>
+            <div className="h-full transition-all" style={{ width: ((idx) / questions.length * 100) + '%', backgroundColor: COLORS.brick }} />
+          </div>
+          <div className="border-2 p-5 sm:p-7" style={{ borderColor: COLORS.navy, backgroundColor: '#fdfaf0', boxShadow: '5px 5px 0 ' + COLORS.navy }}>
+            <div className="text-[10px] uppercase tracking-[0.2em] mb-3" style={{ color: COLORS.brick, fontFamily: "'JetBrains Mono', monospace" }}>
+              {q.kind === 'mcq' ? 'Multiple Choice' : q.kind === 'cmp' ? 'SCOTUS Comparison' : 'Scenario Application'}
+            </div>
+            <p className="text-base sm:text-lg leading-relaxed whitespace-pre-wrap" style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, color: COLORS.navy }}>
+              {q.q}
+            </p>
+            <div className="mt-5 space-y-2.5">
+              {q.options.map((opt, i) => {
+                let border = COLORS.navy + '40', bg = '#fff8e8', color = COLORS.navy;
+                const isSelected = selected === i;
+                const isCorrect = i === q.correct;
+                if (selected !== null && isCorrect) { border = COLORS.navy; bg = '#d8e6c8'; }
+                else if (selected !== null && isSelected && !isCorrect) { border = COLORS.brick; bg = '#fdd6d0'; color = COLORS.brick; }
+                return (
+                  <button key={i} onClick={() => submitAnswer(i)} disabled={selected !== null}
+                    className="w-full text-left p-3.5 border-2 transition-all flex gap-3 items-start"
+                    style={{ borderColor: border, backgroundColor: bg, color, cursor: selected !== null ? 'default' : 'pointer' }}>
+                    <span className="text-xs mt-0.5 opacity-60" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{String.fromCharCode(65 + i)}</span>
+                    <span className="flex-1 text-sm" style={{ fontFamily: "'Fraunces', serif" }}>{opt}</span>
+                    {selected !== null && isCorrect && <Check size={16} />}
+                    {selected !== null && isSelected && !isCorrect && <XIcon size={16} />}
+                  </button>
+                );
+              })}
+            </div>
+            {selected !== null && (
+              <div className="mt-4 p-3 border-l-4" style={{ borderColor: COLORS.brick, backgroundColor: '#fff0ec55' }}>
+                <p className="text-xs leading-relaxed" style={{ fontFamily: "'Fraunces', serif", color: COLORS.navy }}>{q.explain}</p>
+              </div>
+            )}
+          </div>
+          <div className="mt-4 flex justify-end">
+            <button onClick={advance} disabled={selected === null}
+              className="px-6 py-3 flex items-center gap-2 disabled:opacity-40"
+              style={{ backgroundColor: COLORS.navy, color: '#fff8e8', fontFamily: "'Fraunces', serif", fontWeight: 600, cursor: selected === null ? 'not-allowed' : 'pointer' }}>
+              {idx + 1 >= questions.length ? 'Finish' : 'Next'} <ArrowRight size={16} />
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================
+    // RENDER
+    // =========================================================
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
