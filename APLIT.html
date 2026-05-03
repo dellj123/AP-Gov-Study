@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#1f3a2e" />
+<title>AP Lit · The Annotated Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,800;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+html, body { margin: 0; padding: 0; }
+body { background-color: #f5efe1; font-family: 'Inter', system-ui, sans-serif; }
+#loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Fraunces', serif; font-size: 1.5rem; font-style: italic; color: #1f3a2e; }
+</style>
+</head>
+<body>
+<div id="root"><div id="loading">Opening the book…</div></div>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/lucide@0.469.0"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef } = React;
+
+function Icon({ name, size = 16, fill = "none", strokeWidth = 2, ...rest }) {
+  const data = window.lucide && window.lucide.icons && window.lucide.icons[name];
+  if (!data) return null;
+  const children = data[2] || [];
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24"
+         fill={fill} stroke="currentColor" strokeWidth={strokeWidth}
+         strokeLinecap="round" strokeLinejoin="round" {...rest}>
+      {children.map((child, i) => {
+        const [tag, attrs] = child;
+        const reactAttrs = {};
+        for (const k in attrs) {
+          const camel = k.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+          reactAttrs[camel] = attrs[k];
+        }
+        return React.createElement(tag, { key: i, ...reactAttrs });
+      })}
+    </svg>
+  );
+}
+const Feather = (p) => <Icon name="feather" {...p} />;
+const FileText = (p) => <Icon name="file-text" {...p} />;
+const HomeIcon = (p) => <Icon name="house" {...p} />;
+const BookOpen = (p) => <Icon name="book-open" {...p} />;
+const Library = (p) => <Icon name="library" {...p} />;
+const ChevronLeft = (p) => <Icon name="chevron-left" {...p} />;
+const ChevronRight = (p) => <Icon name="chevron-right" {...p} />;
+const Check = (p) => <Icon name="check" {...p} />;
+const XIcon = (p) => <Icon name="x" {...p} />;
+const RotateCcw = (p) => <Icon name="rotate-ccw" {...p} />;
+const ArrowRight = (p) => <Icon name="arrow-right" {...p} />;
+const Sparkles = (p) => <Icon name="sparkles" {...p} />;
+const Shuffle = (p) => <Icon name="shuffle" {...p} />;
+const Eye = (p) => <Icon name="eye" {...p} />;
+const EyeOff = (p) => <Icon name="eye-off" {...p} />;
+const Zap = (p) => <Icon name="zap" {...p} />;
+const Heart = (p) => <Icon name="heart" {...p} />;
+const Trophy = (p) => <Icon name="trophy" {...p} />;
+const Swords = (p) => <Icon name="swords" {...p} />;
+const PenLine = (p) => <Icon name="pen-line" {...p} />;
+const Target = (p) => <Icon name="target" {...p} />;
+const Crown = (p) => <Icon name="crown" {...p} />;
+const Skull = (p) => <Icon name="skull" {...p} />;
+const Quote = (p) => <Icon name="quote" {...p} />;
+const Flame = (p) => <Icon name="flame" {...p} />;
+
+// ========== MAJOR WORKS (15) ==========
+const WORKS = [
+  { id:'hamlet', title:'Hamlet', author:'William Shakespeare', year:1600, period:'English Renaissance', genre:'Tragedy',
+    summary:'Prince Hamlet is visited by his father\'s ghost, who reveals he was murdered by his uncle Claudius — now king and married to Hamlet\'s mother. Hamlet\'s revenge spirals into madness, deception, and the deaths of nearly everyone at court.',
+    themes:['Revenge and its corrosive effects','Madness — feigned and real','Mortality and the meaning of action','Appearance vs. reality','Corruption of the state'],
+    techniques:['Soliloquy as window into psychology','Play-within-a-play (the mousetrap)','Foils — Laertes, Fortinbras','Iambic pentameter contrasted with prose'],
+    whyTested:'Soliloquies, foils, and themes of action vs. paralysis are gold for analytical essays.' },
+  { id:'macbeth', title:'Macbeth', author:'William Shakespeare', year:1606, period:'English Renaissance', genre:'Tragedy',
+    summary:'A Scottish general meets three witches who prophesy his kingship. Driven by ambition and his wife, he murders the king, takes the throne, and descends into tyranny and paranoia until he is killed.',
+    themes:['Ambition unchecked','Fate vs. free will','Guilt and conscience','Gender and power','The corrupting nature of power'],
+    techniques:['Blood imagery throughout','Sleep and disturbance motifs','Dramatic irony with the witches\' prophecies','Hallucination scenes'],
+    whyTested:'Compact, image-rich, ideal for tracking motif (blood, sleep) and character arc.' },
+  { id:'frankenstein', title:'Frankenstein', author:'Mary Shelley', year:1818, period:'Romanticism / Gothic', genre:'Novel',
+    summary:'Victor Frankenstein creates a sentient being from dead flesh, then abandons it in horror. The Creature, rejected by humanity, demands a companion; when refused, he destroys everyone Victor loves.',
+    themes:['Hubris and unchecked science','Isolation and the need for companionship','Nature vs. nurture','Responsibility of the creator','The "monstrous" in society'],
+    techniques:['Frame narrative (Walton → Victor → Creature)','Sublime nature imagery','Doppelgänger / double motif'],
+    whyTested:'Excellent for analyzing structure (frame narrative) and ambiguous moral agency.' },
+  { id:'pride', title:'Pride and Prejudice', author:'Jane Austen', year:1813, period:'Regency / Realism', genre:'Novel',
+    summary:'Elizabeth Bennet navigates the marriage market in early 19th-century England. She clashes with the proud Mr. Darcy, eventually overcoming her prejudices as he overcomes his pride.',
+    themes:['Pride, prejudice, and self-knowledge','Marriage as economic necessity','Class and social mobility','First impressions and misjudgment'],
+    techniques:['Free indirect discourse (innovative for its time)','Verbal, situational, and structural irony','Letters as plot devices'],
+    whyTested:'Master class in irony and free indirect discourse.' },
+  { id:'janeeyre', title:'Jane Eyre', author:'Charlotte Brontë', year:1847, period:'Victorian / Gothic', genre:'Bildungsroman',
+    summary:'An orphan grows up abused, becomes a governess, falls in love with her enigmatic employer Rochester — only to discover his mad wife in the attic. She flees, finds independence, and returns on her own terms.',
+    themes:['Female autonomy and equality','Social class and outsider status','Religion and morality','Passion vs. restraint'],
+    techniques:['First-person retrospective narration','Gothic atmosphere and pathetic fallacy','Symbolic settings (Thornfield, Moor House)'],
+    whyTested:'Strong first-person voice; ripe for character development and setting analysis.' },
+  { id:'heart', title:'Heart of Darkness', author:'Joseph Conrad', year:1899, period:'Early Modernism', genre:'Novella',
+    summary:'Marlow narrates his journey up the Congo to find the ivory trader Kurtz — a man revered as a god by locals and broken by the moral void of European imperialism.',
+    themes:['Imperialism and its hypocrisy','The "darkness" within human nature','Civilization vs. savagery — and which is which','Madness and isolation'],
+    techniques:['Frame narrative','Heavy symbolism (river, fog, darkness)','Ambiguous, unreliable storytelling'],
+    whyTested:'Dense symbolism + unreliable narration = perfect for nuanced analysis.' },
+  { id:'awakening', title:'The Awakening', author:'Kate Chopin', year:1899, period:'Realism / Early Modernism', genre:'Novel',
+    summary:'Edna Pontellier, trapped in conventional marriage in 1890s Louisiana, awakens to her own desires through art, romance, and the sea. Her growing autonomy leads to tragic isolation.',
+    themes:['Female self-discovery and autonomy','Constraints of marriage and motherhood','Sexual and artistic awakening','Solitude and the cost of freedom'],
+    techniques:['Sea as recurring symbol','Free indirect discourse','Sensory imagery — sound, taste, water'],
+    whyTested:'Strong protofeminist text; sea symbolism is highly analyzable.' },
+  { id:'gatsby', title:'The Great Gatsby', author:'F. Scott Fitzgerald', year:1925, period:'Modernism', genre:'Novel',
+    summary:'Nick Carraway narrates the rise and fall of Jay Gatsby, a self-made millionaire whose obsessive pursuit of his lost love Daisy ends in death — and exposes the moral emptiness of the Jazz Age.',
+    themes:['The American Dream and its corruption','Illusion vs. reality','Class and the impossibility of crossing it','Time and the past'],
+    techniques:['First-person framing narrator','Color symbolism — green light, white, gold, gray','Eyes of Doctor T. J. Eckleburg','Lyrical, elegiac prose'],
+    whyTested:'Perennial Q3 favorite. Symbol-heavy and thematically dense.' },
+  { id:'eyes', title:'Their Eyes Were Watching God', author:'Zora Neale Hurston', year:1937, period:'Harlem Renaissance', genre:'Novel',
+    summary:'Janie Crawford recounts her three marriages and her journey toward self-knowledge in the Black communities of Florida — culminating in real love with Tea Cake and tragedy in a hurricane.',
+    themes:['Voice and self-determination','Love as horizon vs. love as cage','Black female identity','Nature as force and metaphor'],
+    techniques:['Frame narrative (Janie tells Pheoby)','Free indirect discourse','African American Vernacular English in dialogue','Pear tree / horizon symbolism'],
+    whyTested:'Voice and narrative framing make it ideal for FRQ analysis.' },
+  { id:'invisible', title:'Invisible Man', author:'Ralph Ellison', year:1952, period:'Modernism / African American Lit', genre:'Novel',
+    summary:'An unnamed Black narrator describes his journey from the segregated South through a Black college to Harlem, where he joins and breaks with a political movement — concluding in literal underground invisibility.',
+    themes:['Identity and invisibility','Race and the failure of ideology','Individuality vs. collective movements','Self-knowledge as freedom'],
+    techniques:['First-person retrospective narration','Dream sequences and surreal episodes','Symbolic objects — briefcase, paint, light','Allusion to Dostoevsky'],
+    whyTested:'Dense symbolism and prologue/epilogue framing work for almost any prompt.' },
+  { id:'beloved', title:'Beloved', author:'Toni Morrison', year:1987, period:'Postmodernism', genre:'Novel',
+    summary:'Sethe, a formerly enslaved woman in post-Civil War Ohio, is haunted — literally — by the daughter she killed to save from slavery. The ghost takes human form as "Beloved."',
+    themes:['Trauma and the impossibility of forgetting','Slavery\'s lasting damage','Motherhood and impossible choices','Memory ("rememory") and the past\'s presence'],
+    techniques:['Nonlinear, fragmented narrative','Multiple shifting perspectives','Magical realism','Lyrical, incantatory prose'],
+    whyTested:'Structurally complex and thematically rich — Morrison\'s prose itself is testable.' },
+  { id:'tfa', title:'Things Fall Apart', author:'Chinua Achebe', year:1958, period:'Postcolonial', genre:'Novel',
+    summary:'Okonkwo, a respected leader in an Igbo village, struggles to maintain his masculinity and tradition as British colonialism and Christian missionaries dismantle his world.',
+    themes:['Colonialism and cultural collapse','Masculinity and its costs','Tradition vs. change','Individual vs. community'],
+    techniques:['Igbo proverbs and folk tales woven in','Three-part structure mirroring decline','Title from Yeats\'s "The Second Coming"'],
+    whyTested:'Title is itself an allusion; structure mirrors theme.' },
+  { id:'salesman', title:'Death of a Salesman', author:'Arthur Miller', year:1949, period:'Modernism', genre:'Drama',
+    summary:'Willy Loman, an aging salesman, deludes himself about his and his sons\' success. Memories bleed into the present until his self-deception drives him to suicide for insurance money.',
+    themes:['American Dream as delusion','Father-son inheritance of failure','Self-deception and identity','Memory as present reality'],
+    techniques:['Expressionistic staging — past and present onstage at once','Recurring motifs — seeds, stockings, the flute','Stage directions as poetry'],
+    whyTested:'Dramatic structure and memory interludes are unique and testable.' },
+  { id:'streetcar', title:'A Streetcar Named Desire', author:'Tennessee Williams', year:1947, period:'Modernism', genre:'Drama',
+    summary:'Fading Southern belle Blanche DuBois moves in with her sister Stella and her brutal husband Stanley. Stanley\'s violence and Blanche\'s fragile illusions collide; she ends institutionalized.',
+    themes:['Illusion vs. reality','Desire and destruction','Old South vs. new America','Mental fragility and isolation'],
+    techniques:['Symbolism — streetcars, paper lanterns, light','Sound — blue piano, polka music','Plastic theatre techniques'],
+    whyTested:'Williams\'s sensory symbolism is exam-ready.' },
+  { id:'scarlet', title:'The Scarlet Letter', author:'Nathaniel Hawthorne', year:1850, period:'American Romanticism', genre:'Novel',
+    summary:'In Puritan Boston, Hester Prynne wears a scarlet "A" for adultery while protecting the identity of her partner — the tormented minister Dimmesdale. Her vengeful husband Chillingworth seeks revenge.',
+    themes:['Sin, guilt, and public vs. private morality','Hypocrisy of Puritan society','Identity and naming','Nature vs. civilization'],
+    techniques:['Scarlet letter as evolving symbol','Allegorical character names','Forest/town binary'],
+    whyTested:'A symbol that transforms across the novel.' },
+];
+
+// ========== FORMS & MOVEMENTS (9) ==========
+const CONCEPTS = [
+  { id:'sonnet', name:'The Sonnet', kind:'Form', era:'14th c. — present',
+    summary:'A 14-line lyric poem, traditionally in iambic pentameter, with a tightly controlled rhyme scheme.',
+    keyIdeas:['PETRARCHAN (Italian): octave (ABBAABBA) + sestet (CDECDE); volta after line 8','SHAKESPEAREAN (English): three quatrains (ABAB CDCD EFEF) + couplet (GG); volta often at line 9 or 13','Volta = the "turn" — a shift in argument, tone, or perspective','Compresses tension: the form forces resolution within a small space'],
+    examples:'Shakespeare\'s 154 sonnets; Donne\'s "Holy Sonnets"; Petrarch.' },
+  { id:'villanelle', name:'The Villanelle', kind:'Form', era:'16th c. — present',
+    summary:'A 19-line poem with two refrains and two repeating rhymes, in five tercets and a closing quatrain.',
+    keyIdeas:['Strict pattern: A1bA2 / abA1 / abA2 / abA1 / abA2 / abA1A2','Refrains gain new meaning each return — repetition transforms the same words','Form is built for obsession, grief, or compulsion','Two-rhyme constraint forces limited sound space'],
+    examples:'Dylan Thomas, "Do not go gentle into that good night"; Elizabeth Bishop, "One Art."' },
+  { id:'verse', name:'Free Verse vs. Blank Verse', kind:'Form', era:'Blank: 16th c.+ · Free: 19th c.+',
+    summary:'Two unrhymed forms with very different relationships to meter.',
+    keyIdeas:['BLANK VERSE: unrhymed iambic pentameter — strict meter, no rhyme. Shakespeare\'s plays, Milton\'s Paradise Lost.','FREE VERSE: no fixed meter, no fixed rhyme — rhythm comes from line breaks, repetition, breath','Free verse is NOT random — it shapes meaning through enjambment, lineation, and white space','Whitman pioneered American free verse; modernists made it dominant'],
+    examples:'Blank: Hamlet\'s soliloquies, Paradise Lost. Free: Whitman\'s "Song of Myself," Eliot\'s "Prufrock."' },
+  { id:'romanticism', name:'Romanticism', kind:'Movement', era:'c. 1790–1850',
+    summary:'Reaction against Enlightenment rationalism — privileging emotion, nature, imagination, and the individual.',
+    keyIdeas:['Sublime nature as both beautiful and terrifying','The individual genius / outcast / rebel','Imagination as a path to truth','Interest in the supernatural, the medieval, the exotic','Spontaneous emotion over polished form'],
+    examples:'Wordsworth, Coleridge, Keats, Shelley, Byron; Mary Shelley\'s Frankenstein; Hawthorne, Poe.' },
+  { id:'realism', name:'Realism & Naturalism', kind:'Movement', era:'c. 1850–1914',
+    summary:'Reaction against Romantic excess — depicting ordinary life truthfully, often grimly.',
+    keyIdeas:['REALISM: middle-class life, plausible characters, social fabric','NATURALISM: extends realism with determinism — characters shaped by environment, heredity, biology','Naturalists often pessimistic: humans as animals subject to natural forces','Influenced by Darwin and emerging social sciences'],
+    examples:'Realism: George Eliot, Henry James, Edith Wharton. Naturalism: Stephen Crane, Theodore Dreiser, Jack London.' },
+  { id:'modernism', name:'Modernism', kind:'Movement', era:'c. 1910–1945',
+    summary:'Radical break with 19th-century forms after WWI shattered faith in progress.',
+    keyIdeas:['Fragmentation, stream of consciousness, broken narratives','Rejection of omniscient narrator; multiple shifting perspectives','Allusion as scaffold (Eliot\'s "Waste Land")','Disillusionment, alienation, "the lost generation"','"Make it new" — Pound\'s rallying cry'],
+    examples:'Eliot, Pound, Joyce, Woolf, Faulkner, Hemingway, Fitzgerald, Stein.' },
+  { id:'harlem', name:'Harlem Renaissance', kind:'Movement', era:'c. 1918–1937',
+    summary:'Flourishing of Black art, music, and literature centered in Harlem, asserting Black identity and creativity.',
+    keyIdeas:['Affirmation of Black cultural heritage and African roots','Use of jazz and blues rhythms in poetry','Vernacular speech in literature','Tension: art for art\'s sake vs. art as racial uplift','Tied to the Great Migration from rural South to urban North'],
+    examples:'Langston Hughes, Zora Neale Hurston, Countee Cullen, Claude McKay, Jean Toomer, Nella Larsen.' },
+  { id:'postmodern', name:'Postmodernism', kind:'Movement', era:'c. 1945–present',
+    summary:'Pushes modernist fragmentation further — questioning the possibility of meaning, truth, and originality itself.',
+    keyIdeas:['Metafiction — fiction about fiction','Pastiche, parody, and intertextuality','Suspicion of grand narratives','Blurring of "high" and "low" culture','Unreliable narrators, multiple realities, playful structure'],
+    examples:'Pynchon, DeLillo, Morrison, Vonnegut, Borges, Atwood.' },
+  { id:'magical', name:'Magical Realism', kind:'Movement', era:'c. 1940s–present',
+    summary:'Realistic narrative in which magical elements are presented as ordinary — no surprise, no explanation.',
+    keyIdeas:['Latin American origins (García Márquez, Borges, Allende)','Magic woven into the fabric of daily life — characters don\'t marvel at it','Often political: critique of colonialism, dictatorship, history','Not the same as fantasy — the real world is intact'],
+    examples:'García Márquez (One Hundred Years of Solitude); Toni Morrison (Beloved); Salman Rushdie.' },
+];
+
+// ========== LITERARY DEVICES (60+ across 6 categories) ==========
+const DEVICES = [
+  { cat:1, term:'Metaphor', def:'Direct comparison without "like" or "as." "All the world\'s a stage."' },
+  { cat:1, term:'Simile', def:'Comparison using "like" or "as." "She walks in beauty, like the night."' },
+  { cat:1, term:'Personification', def:'Giving human qualities to non-human things. "The wind whispered through the trees."' },
+  { cat:1, term:'Hyperbole', def:'Deliberate exaggeration for effect. "I\'ve told you a million times."' },
+  { cat:1, term:'Understatement', def:'Deliberately representing something as less than it is. "\'Tis but a scratch."' },
+  { cat:1, term:'Litotes', def:'Affirmative expressed by negating its opposite. "Not bad" = good.' },
+  { cat:1, term:'Metonymy', def:'Substituting an associated thing for the thing itself. "The crown" = monarchy.' },
+  { cat:1, term:'Synecdoche', def:'Part stands for the whole or vice versa. "All hands on deck"; "wheels" = a car.' },
+  { cat:1, term:'Apostrophe', def:'Direct address to an absent person, abstract idea, or non-human. "Death, be not proud."' },
+  { cat:1, term:'Oxymoron', def:'Two contradictory terms juxtaposed. "Sweet sorrow"; "deafening silence."' },
+  { cat:1, term:'Paradox', def:'Statement that seems contradictory but reveals truth. "Less is more."' },
+  { cat:1, term:'Conceit', def:'Extended, often surprising metaphor sustained throughout a poem. Donne\'s compass.' },
+  { cat:1, term:'Allegory', def:'Narrative in which characters and events systematically represent abstract ideas.' },
+  { cat:1, term:'Imagery', def:'Language that evokes the senses — visual, auditory, tactile, olfactory, gustatory.' },
+  { cat:1, term:'Symbol', def:'Concrete object that represents something abstract. Gatsby\'s green light = unattainable hope.' },
+  { cat:2, term:'Alliteration', def:'Repetition of initial consonant sounds. "Peter Piper picked..."' },
+  { cat:2, term:'Assonance', def:'Repetition of vowel sounds within nearby words. "The rain in Spain..."' },
+  { cat:2, term:'Consonance', def:'Repetition of consonant sounds anywhere in words. "Pitter-patter."' },
+  { cat:2, term:'Sibilance', def:'Repetition of "s" or "sh" sounds — soft, hissing, whispering. A type of consonance.' },
+  { cat:2, term:'Onomatopoeia', def:'Word that imitates the sound it names. "Buzz," "crash," "whisper."' },
+  { cat:2, term:'Euphony', def:'Pleasing, harmonious sound — typically smooth vowels and soft consonants.' },
+  { cat:2, term:'Cacophony', def:'Harsh, discordant sound — clashing consonants. Suggests violence or disorder.' },
+  { cat:2, term:'End Rhyme', def:'Rhyme at the ends of lines.' },
+  { cat:2, term:'Internal Rhyme', def:'Rhyme within a single line. "I bring fresh showers for the thirsting flowers."' },
+  { cat:2, term:'Slant Rhyme', def:'Imperfect/near rhyme. Vowel or consonant matches, but not both. Common in Dickinson.' },
+  { cat:3, term:'Iambic Pentameter', def:'Five iambs per line: unstressed-STRESSED × 5. "Shall I / com-PARE / thee TO / a SUM-/mer\'s DAY."' },
+  { cat:3, term:'Iamb', def:'Metrical foot: unstressed–STRESSED. Most common in English verse.' },
+  { cat:3, term:'Trochee', def:'Metrical foot: STRESSED–unstressed. "TY-ger TY-ger BURN-ing BRIGHT."' },
+  { cat:3, term:'Anapest', def:'Metrical foot: unstressed–unstressed–STRESSED. "\'Twas the NIGHT before CHRIST-mas."' },
+  { cat:3, term:'Dactyl', def:'Metrical foot: STRESSED–unstressed–unstressed. "HALF a league, HALF a league..."' },
+  { cat:3, term:'Spondee', def:'Two stressed syllables in a row. Used for emphasis. "BREAK BREAK BREAK."' },
+  { cat:3, term:'Scansion', def:'Marking the metrical pattern of a poem.' },
+  { cat:3, term:'Enjambment', def:'A line of poetry continues without pause into the next line. Creates momentum or ambiguity.' },
+  { cat:3, term:'End-Stopped Line', def:'A line that ends with a punctuation mark — completing a thought.' },
+  { cat:3, term:'Caesura', def:'A pause within a line of poetry — usually marked by punctuation. Slows rhythm.' },
+  { cat:3, term:'Stanza', def:'A grouped set of lines (couplet=2, tercet=3, quatrain=4, sestet=6, octave=8).' },
+  { cat:3, term:'Volta', def:'The "turn" in a sonnet — a shift in argument, tone, or feeling.' },
+  { cat:4, term:'First-Person POV', def:'Narrator uses "I" — limited to one consciousness. Can be reliable or unreliable.' },
+  { cat:4, term:'Third-Person Limited', def:'Narrator outside the story but limited to one character\'s perspective.' },
+  { cat:4, term:'Third-Person Omniscient', def:'All-knowing narrator with access to all characters\' thoughts.' },
+  { cat:4, term:'Free Indirect Discourse', def:'Third-person narration that takes on a character\'s voice without quotation marks. Austen, Joyce.' },
+  { cat:4, term:'Unreliable Narrator', def:'A narrator whose credibility is compromised — by ignorance, bias, mental state, or deception.' },
+  { cat:4, term:'Frame Narrative', def:'A story within a story. Frankenstein, Heart of Darkness, Wuthering Heights.' },
+  { cat:4, term:'In Medias Res', def:'Beginning a story in the middle of the action.' },
+  { cat:4, term:'Foreshadowing', def:'Hints of what is to come.' },
+  { cat:4, term:'Flashback', def:'A scene set in time before the main narrative.' },
+  { cat:4, term:'Foil', def:'A character whose qualities highlight (by contrast) those of another. Laertes is a foil to Hamlet.' },
+  { cat:4, term:'Static vs. Dynamic', def:'Static = unchanged across the story. Dynamic = changes meaningfully.' },
+  { cat:4, term:'Round vs. Flat', def:'Round = complex, multidimensional. Flat = single-trait, often used as type.' },
+  { cat:4, term:'Bildungsroman', def:'"Coming of age" novel. Jane Eyre, Invisible Man.' },
+  { cat:5, term:'Tone', def:'The author\'s or speaker\'s attitude toward the subject. Can shift within a work.' },
+  { cat:5, term:'Mood', def:'The atmosphere or feeling the work creates IN the reader.' },
+  { cat:5, term:'Verbal Irony', def:'Saying one thing, meaning another. Sarcasm is its sharpest form.' },
+  { cat:5, term:'Situational Irony', def:'Outcome contradicts expectations. A fire station burns down.' },
+  { cat:5, term:'Dramatic Irony', def:'Audience knows something a character does not. Oedipus Rex.' },
+  { cat:5, term:'Satire', def:'Use of humor, irony, exaggeration to expose folly. Swift\'s "A Modest Proposal."' },
+  { cat:5, term:'Juxtaposition', def:'Placing things side by side for comparison or contrast — often producing irony.' },
+  { cat:5, term:'Pathos / Ethos / Logos', def:'Appeals to emotion / credibility / logic. Aristotle\'s rhetorical triad.' },
+  { cat:6, term:'Theme', def:'The central idea the work explores — NOT just a topic. "Love conquers death" is a theme; "love" is a topic.' },
+  { cat:6, term:'Motif', def:'A recurring image, idea, or symbol that develops a theme. Blood in Macbeth.' },
+  { cat:6, term:'Allusion', def:'Reference to another work, person, or event. Eliot\'s allusions in "The Waste Land."' },
+  { cat:6, term:'Archetype', def:'A universal pattern, character, or symbol. The hero, the trickster, the mentor.' },
+  { cat:6, term:'Ambiguity', def:'Deliberate openness to multiple interpretations. A feature, not a flaw.' },
+  { cat:6, term:'Pathetic Fallacy', def:'Nature reflects a character\'s emotional state. Storm during a death scene.' },
+  { cat:6, term:'Tragic Hero', def:'A noble protagonist whose fatal flaw (hamartia) brings about their downfall.' },
+  { cat:6, term:'Hamartia', def:'The fatal flaw or error that leads to the tragic hero\'s downfall.' },
+];
+
+const CAT_NAMES = { 1:'Figurative Language', 2:'Sound Devices', 3:'Structure & Meter', 4:'Narrative Elements', 5:'Tone & Irony', 6:'Theme & Meaning' };
+
+// ========== HARD QUESTIONS (passage-based MCQ, 18) ==========
+const HARD_QUESTIONS = [
+  { passage:'"Hope is the thing with feathers - / That perches in the soul - / And sings the tune without the words - / And never stops - at all -"  — Emily Dickinson',
+    q:'The dominant figurative device in this stanza is best described as:',
+    options:['A simile comparing hope to a bird in flight','An extended metaphor (conceit) figuring hope as a bird','Personification giving hope human emotions','Symbolism in which the bird represents flight'],
+    correct:1, explain:'No "like"/"as" — hope IS a bird (metaphor), and the comparison is extended across multiple lines (conceit).' },
+  { passage:'"It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife."  — Pride and Prejudice, opening',
+    q:'The dominant rhetorical effect of this opening sentence is:',
+    options:['Direct sincerity — Austen states her thesis plainly','Verbal irony — what is "universally acknowledged" is in fact a social assumption Austen will examine','Hyperbole — exaggerating the urgency of marriage','Allegory — the sentence stands for something else entirely'],
+    correct:1, explain:'Austen presents a social assumption AS IF it were universal truth — the gap is verbal irony.' },
+  { passage:'"The fog comes / on little cat feet. / It sits looking / over harbor and city / on silent haunches / and then moves on."  — Carl Sandburg',
+    q:'The poem\'s primary device is:',
+    options:['Simile — fog is compared to a cat using "like"','Personification (extended metaphor) — fog is given the qualities and actions of a cat','Onomatopoeia — the sounds imitate fog','Allegory — the cat represents urban anxiety'],
+    correct:1, explain:'The fog is given catlike attributes (feet, haunches, looking) without "like" or "as" — sustained personification functioning as extended metaphor.' },
+  { passage:'"Death, be not proud, though some have called thee / Mighty and dreadful, for thou art not so."  — John Donne',
+    q:'The opening line illustrates which device most clearly?',
+    options:['Apostrophe — the speaker addresses Death directly','Hyperbole — exaggerating Death\'s power','Pathos — appealing to the reader\'s grief','Oxymoron — Death cannot be proud'],
+    correct:0, explain:'Speaking directly to an abstract entity that cannot respond is apostrophe.' },
+  { passage:'"So we beat on, boats against the current, borne back ceaselessly into the past."  — Fitzgerald, The Great Gatsby (closing)',
+    q:'The line\'s most striking device is:',
+    options:['Alliteration of "b" sounds reinforcing the rhythm of struggle','A simile comparing humans to boats','Hyperbole exaggerating the past\'s power','Apostrophe addressing the past'],
+    correct:0, explain:'Beat / boats / borne / back / borne — alliteration produces the very oar-stroke rhythm the metaphor describes.' },
+  { passage:'"Out, damned spot! out, I say!"  — Lady Macbeth',
+    q:'This line illustrates which device?',
+    options:['Apostrophe — Lady Macbeth addresses an absent stain as if it could obey her','Soliloquy alone — there is no figurative device','Allegory — the spot represents Scotland','Synecdoche — the spot stands for all crimes'],
+    correct:0, explain:'Addressing an inanimate stain as if it could hear and obey is apostrophe — and marks her descent into madness.' },
+  { passage:'"I have measured out my life with coffee spoons."  — T. S. Eliot, "Prufrock"',
+    q:'The line\'s primary effect comes from:',
+    options:['Hyperbole — exaggerating the importance of coffee','Synecdoche/metonymy — small daily rituals stand for an entire life','Personification — giving life the ability to be measured','Allegory — coffee represents wasted time'],
+    correct:1, explain:'Coffee spoons (a tiny daily ritual) stand for the whole of Prufrock\'s timid existence.' },
+  { passage:'"Two roads diverged in a yellow wood, / And sorry I could not travel both."  — Frost',
+    q:'The "two roads" function primarily as:',
+    options:['Literal forest paths with no figurative weight','A metaphor for life choices the speaker faces','A simile comparing roads to choices','Personification giving roads agency'],
+    correct:1, explain:'The roads stand for life decisions — sustained metaphor across the poem.' },
+  { passage:'"In Hamlet, Laertes acts swiftly to avenge his father\'s death; Hamlet, given the same task, hesitates for four acts."',
+    q:'In this comparison, Laertes functions as:',
+    options:['An archetype of the warrior','A foil to Hamlet — his decisive action highlights Hamlet\'s indecision','A symbol of revenge itself','A flat character with no narrative purpose'],
+    correct:1, explain:'A foil is a character whose qualities, by contrast, illuminate another\'s.' },
+  { passage:'"It was the best of times, it was the worst of times..."  — Dickens, A Tale of Two Cities',
+    q:'The opening sentence\'s most prominent device is:',
+    options:['Simile across antithetical phrases','Antithesis — paired contrasts in parallel structure — combined with paradox','Allegory in which "times" represents fate','Onomatopoeia'],
+    correct:1, explain:'Best vs. worst, wisdom vs. foolishness — paired opposites in parallel structure (antithesis) generating paradox.' },
+  { passage:'"All the world\'s a stage, / And all the men and women merely players."  — As You Like It',
+    q:'These lines demonstrate:',
+    options:['Simile — Jaques compares using "like"','Metaphor — Jaques states one thing IS another','Personification — the world is given human qualities','Hyperbole — exaggerating theatricality'],
+    correct:1, explain:'No "like" or "as" — the world IS a stage. Metaphor extending into a structured conceit.' },
+  { passage:'"My mistress\' eyes are nothing like the sun; / Coral is far more red than her lips\' red."  — Shakespeare, Sonnet 130',
+    q:'The sonnet\'s opening relies most directly on:',
+    options:['Hyperbole praising the mistress','Anti-Petrarchan inversion — refusing the conventional love-sonnet similes','Apostrophe addressed to the sun','Simile in praise of natural beauty'],
+    correct:1, explain:'Petrarchan tradition compares a beloved\'s features to ideal beauty. Shakespeare INVERTS the convention to mock its dishonesty.' },
+  { passage:'"Nature\'s first green is gold, / Her hardest hue to hold."  — Frost, "Nothing Gold Can Stay"',
+    q:'"Her hardest hue to hold" is most notable for its:',
+    options:['Simile comparing color to difficulty','Alliteration of "h" combined with personification of Nature','Pure visual imagery without sonic effect','Metonymy in which "hue" stands for spring'],
+    correct:1, explain:'Three "h" sounds (alliteration) and Nature feminized ("Her") through personification.' },
+  { passage:'The narrator of The Great Gatsby, Nick Carraway, opens by claiming his father told him to "reserve all judgments" — yet he spends the novel rendering judgment.',
+    q:'This positions Nick as:',
+    options:['A reliable, objective narrator','An unreliable narrator whose self-image diverges from his actual practice','An omniscient narrator with access to all consciousnesses','A flat narrator who plays no role in the action'],
+    correct:1, explain:'Nick\'s explicit claim and his observed behavior are at odds — a textbook unreliable narrator.' },
+  { passage:'"That is no country for old men. The young / In one another\'s arms, birds in the trees, / — Those dying generations — at their song."  — Yeats',
+    q:'The phrase "those dying generations" most clearly relies on:',
+    options:['Litotes — affirming life by negating death','Paradox — the young are described as dying','Synecdoche — generations stand for nations','Pathetic fallacy — nature mirrors emotion'],
+    correct:1, explain:'The young, in love and song, are simultaneously called dying — paradox.' },
+  { passage:'"The yellow fog that rubs its back upon the window-panes, / The yellow smoke that rubs its muzzle on the window-panes."  — Eliot, "Prufrock"',
+    q:'The repetition of nearly identical phrasing primarily creates:',
+    options:['Anaphora that builds religious solemnity','A parallel personification, animalizing the fog/smoke as a creature','Pure euphony with no thematic effect','Alliteration that imitates fog'],
+    correct:1, explain:'The repeated structure animalizes the fog/smoke (back, muzzle) — extended personification.' },
+  { passage:'"In Beloved, Sethe says: \'It\'s not a story to pass on.\' Morrison closes the novel with the same phrase, three times."',
+    q:'The phrase "pass on" generates ambiguity because it can mean:',
+    options:['"Reject" and "tell" — making the ending purposefully unresolvable','Only "transmit" — there is no real ambiguity','Only "die" — the meaning is fixed','"Reject" and "skip" — but with no further nuance'],
+    correct:0, explain:'Morrison loads "pass on" with both "transmit" and "decline." The ambiguity IS the point.' },
+  { passage:'"In Death of a Salesman, Willy Loman relives memories on the same stage where present action unfolds — past and present share the boards without scene change."',
+    q:'This staging choice MOST DIRECTLY serves which thematic purpose?',
+    options:['Comic relief through visual confusion','Visualizing how memory and self-deception have collapsed Willy\'s ability to live in the present','Demonstrating the playwright\'s technical skill','Indicating the play takes place over many years chronologically'],
+    correct:1, explain:'Miller\'s expressionistic staging puts memory ONSTAGE — Willy literally cannot keep past and present apart.' },
+];
+
+// ========== DEVICE IDENTIFICATION (12) ==========
+const COMPARISONS = [
+  { snippet:'"The wind whispered secrets through the leaves, and the old house listened patiently."',
+    options:['Personification','Metaphor','Hyperbole','Apostrophe'], correct:'Personification',
+    explain:'Wind ("whispered") and house ("listened") are given human qualities — sustained personification.' },
+  { snippet:'"My love is like a red, red rose / That\'s newly sprung in June."  — Burns',
+    options:['Metaphor','Simile','Conceit','Personification'], correct:'Simile',
+    explain:'Comparison using "like" makes it a simile.' },
+  { snippet:'"I have eaten a thousand burgers waiting for this email."',
+    options:['Metonymy','Personification','Hyperbole','Allusion'], correct:'Hyperbole',
+    explain:'Deliberate exaggeration for effect.' },
+  { snippet:'"The crown demands an heir, and Parliament will not be denied."',
+    options:['Personification','Metonymy','Allegory','Hyperbole'], correct:'Metonymy',
+    explain:'"The crown" stands in for the monarchy; "Parliament" for the legislative body. Substituting an associated thing.' },
+  { snippet:'"O Death, where is thy sting? O grave, where is thy victory?"  — 1 Corinthians',
+    options:['Apostrophe','Metaphor','Hyperbole','Anaphora alone'], correct:'Apostrophe',
+    explain:'Direct address to abstract entities (Death, the grave) that cannot respond.' },
+  { snippet:'"She was the sun of my morning, the moon of my night, the every star of my unsleeping sky."',
+    options:['Simile','A series of metaphors building to a conceit','Hyperbole alone','Pure imagery'], correct:'A series of metaphors building to a conceit',
+    explain:'Each phrase is a metaphor (she IS the sun, the moon, the stars). Sustained = conceit.' },
+  { snippet:'"The silken sad uncertain rustling of each purple curtain..."  — Poe',
+    options:['Onomatopoeia only','Sibilance and alliteration imitating the sound described','Hyperbole','Apostrophe'], correct:'Sibilance and alliteration imitating the sound described',
+    explain:'The repeated soft "s" sounds mimic the rustling — sound doing semantic work.' },
+  { snippet:'"It was a bright cold day in April, and the clocks were striking thirteen."  — Orwell, 1984',
+    options:['Foreshadowing through one estranging detail signaling a world off-axis','Hyperbole exaggerating the time','Allegory of Big Brother','Pathetic fallacy'], correct:'Foreshadowing through one estranging detail signaling a world off-axis',
+    explain:'"Striking thirteen" foreshadows a world tilted off-normal. Master class in opening foreshadowing.' },
+  { snippet:'In Sophocles\' Oedipus Rex, the audience knows from the start that Oedipus has killed his father and married his mother. Oedipus does not.',
+    options:['Verbal irony','Situational irony','Dramatic irony','Cosmic irony'], correct:'Dramatic irony',
+    explain:'When the audience knows something a character does not — definitionally, dramatic irony.' },
+  { snippet:'"The line of cars stretched for miles, an iron snake winding through the desert heat."',
+    options:['Simile','Metaphor','Personification','Synecdoche'], correct:'Metaphor',
+    explain:'No "like"/"as" — the cars ARE described AS an iron snake.' },
+  { snippet:'"The thunder grumbled, the wind groaned, and the rain hammered the roof in furious complaint."',
+    options:['Onomatopoeia only','Personification combined with onomatopoeia','Pure imagery','Pathetic fallacy alone'], correct:'Personification combined with onomatopoeia',
+    explain:'"Grumbled," "groaned," "hammered" both imitate sounds AND give human emotion.' },
+  { snippet:'"Some say the world will end in fire, / Some say in ice."  — Frost',
+    options:['Allegory in which fire and ice represent passions','Pure imagery','Simile','Apostrophe'], correct:'Allegory in which fire and ice represent passions',
+    explain:'Fire (desire) and ice (hate) are systematic stand-ins for destructive emotions.' },
+];
+
+// ========== CLOSE READ — passage + analytical Q (10) ==========
+const APPLICATIONS = [
+  { passage:'"I think I could turn and live with animals, they are so placid and self-contain\'d, / I stand and look at them long and long. / They do not sweat and whine about their condition, / They do not lie awake in the dark and weep for their sins."  — Whitman',
+    q:'The speaker\'s tone toward humanity in this passage is best described as:',
+    options:['Reverent and worshipful','Wearied and disillusioned, contrasting human anxiety with animal serenity','Rageful and accusatory','Indifferent and detached'],
+    correct:1, explain:'The speaker is exhausted by human self-tormenting nature ("sweat and whine," "weep for their sins") — wearied, not enraged.' },
+  { passage:'"And miles to go before I sleep, / And miles to go before I sleep."  — Frost, "Stopping by Woods on a Snowy Evening"',
+    q:'The repetition of the final line most likely serves to:',
+    options:['Indicate the speaker has fallen asleep','Transform a literal claim about distance into a metaphorical one about life\'s remaining obligations','Mock the convention of poetic closure','Establish the rhyme scheme'],
+    correct:1, explain:'The first instance reads literally; the repetition pushes "miles" and "sleep" into figurative weight.' },
+  { passage:'"Mistah Kurtz — he dead."  — Heart of Darkness',
+    q:'The clipped, broken-grammar announcement of Kurtz\'s death produces what effect?',
+    options:['Comic deflation of a major plot point','A devastating compression: the rhetoric Kurtz once embodied is reduced to four bare words','Confusion about who has died','Foreshadowing of further deaths'],
+    correct:1, explain:'Kurtz, the man of speeches and elaborate horror, dies in four words of broken English. Form mirrors collapse.' },
+  { passage:'In Beloved, the unnamed ghost of Sethe\'s daughter takes human form as a young woman called "Beloved" — the only word Sethe could afford to carve on her gravestone.',
+    q:'The naming detail is most significant because it:',
+    options:['Provides comic relief','Compresses the novel\'s themes — slavery, motherhood, language\'s inadequacy — into a single name','Foreshadows the ending','Serves as a red herring'],
+    correct:1, explain:'The name itself encodes economic violence (only one word affordable), maternal grief, and the limits of language to honor the dead.' },
+  { passage:'"In Death of a Salesman, Willy Loman relives memories on the same stage where present action unfolds — past and present share the boards without scene change."',
+    q:'This staging choice MOST DIRECTLY serves which thematic purpose?',
+    options:['Comic relief through visual confusion','Visualizing how memory and self-deception have collapsed Willy\'s ability to live in the present','Demonstrating technical skill','Indicating chronological years passing'],
+    correct:1, explain:'Miller\'s expressionistic staging puts memory ONSTAGE as living continuation — Willy cannot keep past and present apart.' },
+  { passage:'"In Their Eyes Were Watching God, Janie\'s narration to Pheoby frames the entire novel — the story we read is one Janie chooses to tell."',
+    q:'This narrative frame primarily emphasizes:',
+    options:['That Janie\'s story is unreliable','Janie\'s reclamation of voice and authorship over her own life','The frame breaks the rules of realism','Pheoby is the true protagonist'],
+    correct:1, explain:'Janie has been silenced by her first two husbands — telling her story IS her thematic arrival at voice.' },
+  { passage:'"The eyes of Doctor T. J. Eckleburg — fading on a billboard above the Valley of Ashes — watch over the wasteland between West Egg and New York."  — Gatsby',
+    q:'The Eckleburg billboard functions in the novel most directly as:',
+    options:['A piece of period décor with no figurative weight','A symbol of an absent or indifferent God watching over moral ruin','An allusion to a real historical figure','Pathetic fallacy reflecting Nick\'s mood'],
+    correct:1, explain:'Faded eyes on a commercial billboard, watching over a moral wasteland — a stand-in for an absent divinity.' },
+  { passage:'"In Hamlet III.i, Hamlet\'s \'To be, or not to be\' soliloquy interrupts the play\'s plot to expose his consciousness directly to the audience."',
+    q:'The dramatic function of soliloquy is best described as:',
+    options:['A pause for the audience to rest','Direct access to a character\'s inner thoughts unfiltered by other characters\' perception','A device for advancing plot through dialogue','A break in iambic pentameter'],
+    correct:1, explain:'Soliloquy is the theatrical equivalent of free indirect discourse — the audience gets the character\'s mind directly.' },
+  { passage:'"The opening of Pride and Prejudice — \'It is a truth universally acknowledged...\' — is rendered in third-person narration that nonetheless seems to channel the gossip and assumptions of Mrs. Bennet\'s social world."',
+    q:'This narrative technique is best identified as:',
+    options:['First-person narration','Stream of consciousness','Free indirect discourse','Omniscient editorializing'],
+    correct:2, explain:'Free indirect discourse: the narrator stays in third person but takes on a character/community\'s diction.' },
+  { passage:'In Things Fall Apart, the title is taken from Yeats\'s "The Second Coming": "Things fall apart; the centre cannot hold."',
+    q:'Achebe\'s use of this allusion as his title primarily:',
+    options:['Decorates the novel with a famous phrase','Frames the novel\'s collapse of Igbo society in dialogue with Western literary tradition — using the colonizer\'s language to indict colonization','Foreshadows the ending','Suggests Achebe is imitating Yeats'],
+    correct:1, explain:'The title turns Yeats\'s lament about Western civilization into a frame for Igbo collapse — the colonizer\'s language naming what colonization breaks.' },
+];
+
+// ========== FRQ PROMPTS (3 — matches AP Lit exam) ==========
+const FRQ_PROMPTS = [
+  { title:'Q1 · Poetry Analysis',
+    prompt:'Read the following poem carefully. Then write an essay analyzing how the poet uses literary techniques to convey the speaker\'s complex attitude toward time, mortality, or change.',
+    passage:'Sonnet 73 — William Shakespeare\n\nThat time of year thou mayst in me behold\nWhen yellow leaves, or none, or few, do hang\nUpon those boughs which shake against the cold,\nBare ruined choirs, where late the sweet birds sang.\nIn me thou see\'st the twilight of such day\nAs after sunset fadeth in the west,\nWhich by and by black night doth take away,\nDeath\'s second self, that seals up all in rest.\nIn me thou see\'st the glowing of such fire,\nThat on the ashes of his youth doth lie,\nAs the death-bed whereon it must expire,\nConsum\'d with that which it was nourish\'d by.\n   This thou perceiv\'st, which makes thy love more strong,\n   To love that well which thou must leave ere long.',
+    instructions:'A strong response identifies the three central metaphors (autumn, twilight, dying fire), traces their progression toward death, and analyzes how the closing couplet (the volta) reframes mortality through love.',
+    rubric:[
+      { id:'thesis', label:'Defensible thesis identifying the speaker\'s complex attitude (1 pt)' },
+      { id:'evidence1', label:'First piece of specific textual evidence with literary technique named (1 pt)' },
+      { id:'evidence2', label:'Second piece of specific evidence — different technique (1 pt)' },
+      { id:'analysis', label:'Analysis explains HOW techniques produce meaning, not just WHAT they are (1 pt)' },
+      { id:'complexity', label:'Engages with complexity — addresses tension, multiple meanings, or the volta (1 pt)' },
+      { id:'sophistication', label:'Sophistication: vivid prose, precise diction, organic structure (1 pt)' },
+    ] },
+  { title:'Q2 · Prose Fiction Analysis',
+    prompt:'Read the following passage carefully. Then write an essay analyzing how the author uses literary techniques to characterize the protagonist and convey her psychological state.',
+    passage:'From "The Story of an Hour" — Kate Chopin (1894)\n\nShe knew that she would weep again when she saw the kind, tender hands folded in death; the face that had never looked save with love upon her, fixed and gray and dead. But she saw beyond that bitter moment a long procession of years to come that would belong to her absolutely. And she opened and spread her arms out to them in welcome.\n\nThere would be no one to live for during those coming years; she would live for herself. There would be no powerful will bending hers in that blind persistence with which men and women believe they have a right to impose a private will upon a fellow-creature.\n\nAnd yet she had loved him — sometimes. Often she had not. What did it matter! What could love, the unsolved mystery, count for in the face of this possession of self-assertion which she suddenly recognized as the strongest impulse of her being!\n\n"Free! Body and soul free!" she kept whispering.',
+    instructions:'A strong response analyzes the tension between conventional grief and unconventional liberation, the techniques (free indirect discourse, syntax, imagery of opening) that render Mrs. Mallard\'s psychology, and the irony surrounding her "freedom."',
+    rubric:[
+      { id:'thesis', label:'Defensible thesis on protagonist\'s psychological state (1 pt)' },
+      { id:'evidence1', label:'First piece of specific evidence + technique (1 pt)' },
+      { id:'evidence2', label:'Second piece of evidence — different technique (1 pt)' },
+      { id:'analysis', label:'Analysis explains how techniques reveal psychology (1 pt)' },
+      { id:'complexity', label:'Addresses tension/ambivalence/irony (1 pt)' },
+      { id:'sophistication', label:'Sophisticated prose and structure (1 pt)' },
+    ] },
+  { title:'Q3 · Literary Argument',
+    prompt:'Many works of literature feature a character whose deeply held beliefs come into conflict with the world around them. Choose a novel or play in which a character\'s convictions are tested by external forces. Then, in a well-organized essay, analyze how the conflict between the character\'s convictions and external forces shapes the meaning of the work as a whole. Do not merely summarize the plot.',
+    passage:'(No passage — choose your own work. Strong choices include: Hamlet, Things Fall Apart, Beloved, Invisible Man, The Awakening, Their Eyes Were Watching God, Frankenstein, A Streetcar Named Desire, Death of a Salesman, The Scarlet Letter.)',
+    instructions:'A strong Q3 response: (1) names a defensible thesis about meaning, (2) cites specific scenes/moments without summarizing, (3) connects evidence to the thesis with explicit reasoning, (4) addresses how the conflict shapes the work\'s overall meaning — NOT just the plot.',
+    rubric:[
+      { id:'thesis', label:'Defensible thesis about how the conflict shapes meaning (1 pt)' },
+      { id:'evidence1', label:'First specific piece of evidence from the chosen work (1 pt)' },
+      { id:'evidence2', label:'Second specific piece of evidence — different scene/element (1 pt)' },
+      { id:'analysis', label:'Analysis ties evidence to thesis without summary (1 pt)' },
+      { id:'complexity', label:'Engages with complexity — tensions, ambiguity, multiple readings (1 pt)' },
+      { id:'sophistication', label:'Vivid prose, organic structure, sophisticated voice (1 pt)' },
+    ] },
+];
+
+// ========== SPEED ROUND (25 quick recall) ==========
+const SPEED_QUESTIONS = [
+  { q:'A 14-line poem in iambic pentameter is a:', options:['Villanelle','Sonnet','Sestina','Ode'], correct:1 },
+  { q:'"My love is like a red, red rose" =', options:['Metaphor','Simile','Hyperbole','Conceit'], correct:1 },
+  { q:'Direct address to an absent person/idea:', options:['Apostrophe','Allusion','Anaphora','Allegory'], correct:0 },
+  { q:'STRESSED–unstressed pattern is a:', options:['Iamb','Trochee','Dactyl','Anapest'], correct:1 },
+  { q:'A line continuing without pause to the next:', options:['Caesura','Enjambment','End-stopped','Volta'], correct:1 },
+  { q:'Sea is a recurring symbol in:', options:['Beloved','The Awakening','Hamlet','Pride and Prejudice'], correct:1 },
+  { q:'"Death, be not proud" is by:', options:['Donne','Milton','Wordsworth','Keats'], correct:0 },
+  { q:'"The crown demands" =', options:['Synecdoche','Metonymy','Allegory','Symbol'], correct:1 },
+  { q:'Audience knows what character doesn\'t:', options:['Verbal irony','Situational irony','Dramatic irony','Cosmic irony'], correct:2 },
+  { q:'Frankenstein\'s author:', options:['Mary Shelley','Percy Shelley','Byron','Coleridge'], correct:0 },
+  { q:'"All hands on deck" =', options:['Metonymy','Synecdoche','Hyperbole','Personification'], correct:1 },
+  { q:'Soliloquy reveals:', options:['Plot','Inner thoughts','Setting','Conflict'], correct:1 },
+  { q:'Whitman wrote in:', options:['Sonnet','Blank verse','Free verse','Villanelle'], correct:2 },
+  { q:'"Sweet sorrow" =', options:['Paradox','Oxymoron','Hyperbole','Pun'], correct:1 },
+  { q:'Coming-of-age novel =', options:['Allegory','Bildungsroman','Frame narrative','Pastoral'], correct:1 },
+  { q:'Their Eyes Were Watching God author:', options:['Morrison','Hurston','Walker','Baldwin'], correct:1 },
+  { q:'A "turn" in a sonnet:', options:['Caesura','Volta','Enjambment','Stanza'], correct:1 },
+  { q:'Heart of Darkness narrator:', options:['Kurtz','Marlow','Conrad','The Captain'], correct:1 },
+  { q:'Author\'s attitude =', options:['Mood','Tone','Voice','Diction'], correct:1 },
+  { q:'Reader\'s feeling =', options:['Mood','Tone','Voice','Diction'], correct:0 },
+  { q:'Hurricane appears in:', options:['Beloved','Their Eyes Were Watching God','The Awakening','Hamlet'], correct:1 },
+  { q:'Macbeth\'s key motif:', options:['Light','Blood','Water','Stone'], correct:1 },
+  { q:'Things Fall Apart title alludes to:', options:['Eliot','Yeats','Frost','Auden'], correct:1 },
+  { q:'Repeated initial consonants =', options:['Assonance','Alliteration','Consonance','Sibilance'], correct:1 },
+  { q:'Beloved ghost is named:', options:['Sethe','Denver','Beloved','Paul D'], correct:2 },
+];
+
+// ========== STORAGE ==========
+const safeGet = (key, fallback) => {
+  try { const v = localStorage.getItem(key); if (v == null) return fallback; return JSON.parse(v); } catch { return fallback; }
+};
+const safeSet = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} };
+
+const COLORS = { cream:'#f5efe1', forest:'#1f3a2e', oxblood:'#7c2415', gold:'#c89d4f', ink:'#1a1a1a' };
+const BADGE_LABELS = { firstSpeed:'Quick Wit', combo10:'10x Combo', perfectSpeed:'Flawless Reading', finalPass:'Exam Passed', finalAce:'Master of Letters', frqDone:'Essay Crafted' };
+
+// ========== APP ==========
+function App() {
+  const [view, setView] = useState('home');
+  const [studySub, setStudySub] = useState('works');
+  const [drillSub, setDrillSub] = useState('speed');
+  const [progress, setProgress] = useState({ works:{}, concepts:{}, devices:{} });
+  const [stats, setStats] = useState({ speedBest:0, comboBest:0, bossBest:0, bossAttempts:0, xp:0, badges:{} });
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    setProgress(safeGet('aplit:progress', { works:{}, concepts:{}, devices:{} }));
+    setStats(safeGet('aplit:stats', { speedBest:0, comboBest:0, bossBest:0, bossAttempts:0, xp:0, badges:{} }));
+    setLoaded(true);
+  }, []);
+
+  const updateProgress = (kind, id, status) => {
+    const next = { ...progress, [kind]: { ...progress[kind], [id]: status } };
+    setProgress(next); safeSet('aplit:progress', next);
+  };
+  const updateStats = (patch, badgeKey) => {
+    const newStats = { ...stats, ...patch };
+    if (badgeKey) newStats.badges = { ...stats.badges, [badgeKey]: true };
+    setStats(newStats); safeSet('aplit:stats', newStats);
+  };
+  const addXP = (amt, badgeKey) => updateStats({ xp: (stats.xp || 0) + amt }, badgeKey);
+
+  return (
+    <div className="min-h-screen w-full"
+      style={{ backgroundColor:COLORS.cream,
+        backgroundImage:`radial-gradient(circle at 20% 10%, rgba(200,157,79,0.10), transparent 40%), radial-gradient(circle at 90% 90%, rgba(124,36,21,0.06), transparent 40%)`,
+        fontFamily:"'Inter', system-ui, sans-serif", color:COLORS.forest }}>
+      <Header view={view} setView={setView} stats={stats} />
+      <main className="max-w-6xl mx-auto px-4 sm:px-8 pb-24">
+        {!loaded ? (
+          <div className="py-32 text-center" style={{ fontFamily:"'Fraunces', serif" }}>
+            <div className="text-2xl italic">Opening the book…</div>
+          </div>
+        ) : (
+          <>
+            {view === 'home' && <Home stats={stats} progress={progress} setView={setView} setStudySub={setStudySub} setDrillSub={setDrillSub} />}
+            {view === 'study' && <StudyHub sub={studySub} setSub={setStudySub} progress={progress} updateProgress={updateProgress} addXP={addXP} />}
+            {view === 'drill' && <DrillHub sub={drillSub} setSub={setDrillSub} stats={stats} updateStats={updateStats} addXP={addXP} />}
+            {view === 'boss' && <BossMode stats={stats} updateStats={updateStats} addXP={addXP} />}
+          </>
+        )}
+      </main>
+      <footer className="text-center py-8 text-xs opacity-60" style={{ fontFamily:"'JetBrains Mono', monospace" }}>
+        AP English Literature & Composition — Study Tool
+      </footer>
+    </div>
+  );
+}
+
+function Header({ view, setView, stats }) {
+  const tabs = [
+    { id:'home', label:'Home', icon:HomeIcon },
+    { id:'study', label:'Study', icon:BookOpen },
+    { id:'drill', label:'Drill', icon:Swords },
+    { id:'boss', label:'Final Exam', icon:Crown },
+  ];
+  return (
+    <header className="border-b-2 sticky top-0 z-20" style={{ borderColor:COLORS.forest, backgroundColor:'#f5efe1ee', backdropFilter:'blur(8px)' }}>
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 pt-4 pb-2.5">
+        <div className="flex items-baseline justify-between flex-wrap gap-3">
+          <div>
+            <div className="text-2xl sm:text-4xl leading-none tracking-tight"
+                 style={{ fontFamily:"'Fraunces', serif", fontWeight:900, color:COLORS.forest, letterSpacing:'-0.02em' }}>
+              The Annotated Edition
+            </div>
+            <div className="mt-1 text-[10px] uppercase tracking-[0.2em]"
+                 style={{ color:COLORS.oxblood, fontFamily:"'JetBrains Mono', monospace" }}>
+              AP English Literature · Hard Mode
+            </div>
+          </div>
+          <div className="flex gap-3 items-center text-xs" style={{ fontFamily:"'JetBrains Mono', monospace" }}>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 border" style={{ borderColor:COLORS.gold, color:COLORS.forest }}>
+              <Sparkles size={12} style={{ color:COLORS.gold }} />
+              <span style={{ fontWeight:700 }}>{stats.xp || 0}</span> XP
+            </div>
+          </div>
+        </div>
+        <nav className="mt-4 flex gap-1 sm:gap-2 overflow-x-auto -mx-1 px-1">
+          {tabs.map(t => {
+            const Icn = t.icon;
+            const active = view === t.id;
+            return (
+              <button key={t.id} onClick={() => setView(t.id)}
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm transition-all whitespace-nowrap"
+                style={{
+                  fontFamily:"'Fraunces', serif", fontWeight:600, letterSpacing:'0.02em',
+                  color:active ? '#fff8e8' : COLORS.forest,
+                  backgroundColor:active ? COLORS.forest : 'transparent',
+                  border:`1.5px solid ${active ? COLORS.forest : 'transparent'}`,
+                  borderRadius:2,
+                }}>
+                <Icn size={15} />
+                {t.label}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+    </header>
+  );
+}
+
+function Home({ stats, progress, setView, setStudySub, setDrillSub }) {
+  const masteredCount = (obj) => Object.values(obj || {}).filter(v => v === 'mastered').length;
+  const totalMastered = masteredCount(progress.works) + masteredCount(progress.concepts) + masteredCount(progress.devices);
+  const totalItems = WORKS.length + CONCEPTS.length + DEVICES.length;
+  const pct = Math.round((totalMastered / totalItems) * 100);
+  const level = Math.floor((stats.xp || 0) / 100) + 1;
+  const xpInLevel = (stats.xp || 0) % 100;
+  const badges = stats.badges || {};
+  const hasBadges = Object.keys(badges).length > 0;
+  const drills = [
+    { id:'speed', title:'Speed Round', sub:'15s · 3 lives · combos', icon:Zap, color:COLORS.oxblood },
+    { id:'identify', title:'Device ID', sub:'Snippet → device', icon:Quote, color:COLORS.forest },
+    { id:'closeread', title:'Close Read', sub:'Passage analysis', icon:BookOpen, color:COLORS.forest },
+    { id:'frq', title:'FRQ Practice', sub:'Q1, Q2, Q3 + rubric', icon:PenLine, color:COLORS.forest },
+  ];
+  return (
+    <div className="pt-8">
+      <section className="grid md:grid-cols-5 gap-5 items-end pb-8 border-b" style={{ borderColor:COLORS.forest + '33' }}>
+        <div className="md:col-span-3">
+          <div className="text-xs uppercase tracking-[0.25em] mb-2" style={{ color:COLORS.oxblood, fontFamily:"'JetBrains Mono', monospace" }}>
+            Welcome back
+          </div>
+          <h1 className="leading-[0.95]" style={{ fontFamily:"'Fraunces', serif", fontWeight:800, fontSize:'clamp(2rem, 5.5vw, 3.6rem)', color:COLORS.forest, letterSpacing:'-0.03em' }}>
+            Read closely. Write boldly. Earn your <em style={{ color:COLORS.oxblood }}>5</em>.
+          </h1>
+          <p className="mt-3 text-base max-w-xl" style={{ fontFamily:"'Fraunces', serif", lineHeight:1.5 }}>
+            Major works, literary devices, passage analysis, FRQ practice. Earn XP. Sharpen your reading.
+          </p>
+        </div>
+        <div className="md:col-span-2 grid gap-3">
+          <div className="border-2 p-5" style={{ borderColor:COLORS.forest, backgroundColor:'#fff8e8' }}>
+            <div className="flex items-baseline justify-between mb-1">
+              <div className="text-xs uppercase tracking-[0.2em]" style={{ fontFamily:"'JetBrains Mono', monospace" }}>Level</div>
+              <div className="text-3xl" style={{ fontFamily:"'Fraunces', serif", fontWeight:800, color:COLORS.oxblood }}>{level}</div>
+            </div>
+            <div className="h-2 w-full" style={{ backgroundColor:COLORS.forest + '20' }}>
+              <div className="h-full transition-all duration-700" style={{ width:xpInLevel + '%', backgroundColor:COLORS.gold }} />
+            </div>
+            <div className="mt-1.5 text-[10px] flex justify-between" style={{ fontFamily:"'JetBrains Mono', monospace" }}>
+              <span>{xpInLevel}/100 XP to next level</span>
+              <span>Total: {stats.xp || 0}</span>
+            </div>
+          </div>
+          <div className="border-2 p-5" style={{ borderColor:COLORS.forest + '60' }}>
+            <div className="flex items-baseline justify-between">
+              <div className="text-xs uppercase tracking-[0.2em]" style={{ fontFamily:"'JetBrains Mono', monospace" }}>Mastery</div>
+              <div className="text-2xl" style={{ fontFamily:"'Fraunces', serif", fontWeight:800, color:COLORS.forest }}>{pct}%</div>
+            </div>
+            <div className="mt-1 text-[11px] opacity-70" style={{ fontFamily:"'JetBrains Mono', monospace" }}>
+              {totalMastered} / {totalItems} items mastered
+            </div>
+          </div>
+        </div>
+      </section>
+      <section className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+        <Stat label="Speed Best" value={stats.speedBest || 0} icon={Zap} color={COLORS.oxblood} />
+        <Stat label="Top Combo" value={stats.comboBest || 0} icon={Flame} color={COLORS.gold} />
+        <Stat label="Final Best" value={(stats.bossBest || 0) + (stats.bossBest ? '%' : '')} icon={Crown} color={COLORS.forest} />
+        <Stat label="Final Tries" value={stats.bossAttempts || 0} icon={Target} color={COLORS.forest} />
+      </section>
+      <section className="grid md:grid-cols-2 gap-4 mt-8">
+        <button onClick={() => { setStudySub('works'); setView('study'); }}
+          className="text-left p-7 transition-all hover:-translate-y-1"
+          style={{ backgroundColor:'#fdfaf0', border:`2px solid ${COLORS.forest}` }}>
+          <div className="flex items-center gap-3 text-xs uppercase tracking-[0.2em]" style={{ fontFamily:"'JetBrains Mono', monospace", color:COLORS.oxblood }}>
+            <BookOpen size={14} /> Study
+          </div>
+          <div className="mt-3 text-3xl" style={{ fontFamily:"'Fraunces', serif", fontWeight:700, color:COLORS.forest }}>
+            Works. Forms. Devices.
+          </div>
+          <p className="mt-2 text-sm opacity-80" style={{ fontFamily:"'Fraunces', serif" }}>
+            15 major literary works, 9 forms and movements, 65+ literary devices grouped by category.
+          </p>
+        </button>
+        <button onClick={() => { setDrillSub('speed'); setView('drill'); }}
+          className="text-left p-7 transition-all hover:-translate-y-1"
+          style={{ backgroundColor:COLORS.forest, color:'#fff8e8' }}>
+          <div className="flex items-center gap-3 text-xs uppercase tracking-[0.2em]" style={{ fontFamily:"'JetBrains Mono', monospace", color:COLORS.gold }}>
+            <Swords size={14} /> Drill
+          </div>
+          <div className="mt-3 text-3xl" style={{ fontFamily:"'Fraunces', serif", fontWeight:700 }}>
+            Speed. Device ID. Close Read. FRQ.
+          </div>
+          <p className="mt-2 text-sm opacity-80" style={{ fontFamily:"'Fraunces', serif" }}>
+            Game modes that test you the way the exam will.
+          </p>
+        </button>
+      </section>
+      <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+        {drills.map(d => {
+          const Icn = d.icon;
+          return (
+            <button key={d.id} onClick={() => { setDrillSub(d.id); setView('drill'); }}
+              className="text-left p-5 border transition-all hover:-translate-y-0.5"
+              style={{ borderColor:COLORS.forest + '40', backgroundColor:'#fdfaf0' }}>
+              <Icn size={22} style={{ color:d.color }} />
+              <div className="mt-3 text-lg" style={{ fontFamily:"'Fraunces', serif", fontWeight:700, color:COLORS.forest }}>{d.title}</div>
+              <div className="text-[11px] mt-1 opacity-70" style={{ fontFamily:"'JetBrains Mono', monospace" }}>{d.sub}</div>
+            </button>
+          );
+        })}
+      </section>
+      <section className="mt-6">
+        <button onClick={() => setView('boss')}
+          className="w-full text-left p-7 transition-all hover:-translate-y-1 relative overflow-hidden"
+          style={{ backgroundColor:COLORS.oxblood, color:'#fff8e8' }}>
+          <div className="flex items-center gap-3 text-xs uppercase tracking-[0.2em]" style={{ fontFamily:"'JetBrains Mono', monospace", color:COLORS.gold }}>
+            <Crown size={14} /> Final Boss
+          </div>
+          <div className="mt-2 text-4xl sm:text-5xl" style={{ fontFamily:"'Fraunces', serif", fontWeight:800, letterSpacing:'-0.02em' }}>
+            The Final Exam.
+          </div>
+          <p className="mt-2 text-sm opacity-90 max-w-xl" style={{ fontFamily:"'Fraunces', serif" }}>
+            20 mixed questions. No skips. 8-minute timer. Prove your reading.
+          </p>
+          <div className="mt-3 text-xs opacity-80" style={{ fontFamily:"'JetBrains Mono', monospace" }}>
+            Best: {stats.bossBest ? stats.bossBest + '%' : '—'} · Attempts: {stats.bossAttempts || 0}
+          </div>
+        </button>
+      </section>
+      {hasBadges && (
+        <section className="mt-8">
+          <div className="text-xs uppercase tracking-[0.25em] mb-3" style={{ color:COLORS.oxblood, fontFamily:"'JetBrains Mono', monospace" }}>
+            Achievements
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {Object.keys(badges).map(b => (
+              <div key={b} className="px-3 py-1.5 border-2 text-xs" style={{ borderColor:COLORS.gold, color:COLORS.forest, fontFamily:"'JetBrains Mono', monospace", backgroundColor:'#fff8e8' }}>
+                <Trophy size={11} className="inline mr-1.5" style={{ color:COLORS.gold }} />
+                {BADGE_LABELS[b] || b}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
+
+function Stat({ label, value, icon:Icn, color }) {
+  return (
+    <div className="border p-3" style={{ borderColor:COLORS.forest + '30', backgroundColor:'#fdfaf0' }}>
+      <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.15em]" style={{ fontFamily:"'JetBrains Mono', monospace", opacity:0.7 }}>
+        <Icn size={12} style={{ color }} />
+        {label}
+      </div>
+      <div className="text-2xl mt-1" style={{ fontFamily:"'Fraunces', serif", fontWeight:700, color }}>{value}</div>
+    </div>
+  );
+}
+
+function StudyHub({ sub, setSub, progress, updateProgress, addXP }) {
+  const subs = [
+    { id:'works', label:'Works', icon:BookOpen },
+    { id:'concepts', label:'Forms & Movements', icon:Library },
+    { id:'devices', label:'Devices', icon:Feather },
+  ];
+  return (
+    <div className="pt-6">
+      <SubNav items={subs} active={sub} onChange={setSub} />
+      {sub === 'works' && (
+        <Flashcards items={WORKS} kind="works" progress={progress.works}
+          onUpdate={(id, status) => { updateProgress('works', id, status); if (status === 'mastered') addXP(2); }}
+          renderFront={(w) => <WorkFront w={w} />} renderBack={(w) => <WorkBack w={w} />} />
+      )}
+      {sub === 'concepts' && (
+        <Flashcards items={CONCEPTS} kind="concepts" progress={progress.concepts}
+          onUpdate={(id, status) => { updateProgress('concepts', id, status); if (status === 'mastered') addXP(2); }}
+          renderFront={(c) => <ConceptFront c={c} />} renderBack={(c) => <ConceptBack c={c} />} />
+      )}
+      {sub === 'devices' && (
+        <DevicesView progress={progress.devices} onUpdate={(id, status) => { updateProgress('devices', id, status); if (status === 'mastered') addXP(1); }} />
+      )}
+    </div>
+  );
+}
+
+function SubNav({ items, active, onChange }) {
+  return (
+    <div className="flex gap-2 mb-6 overflow-x-auto -mx-1 px-1">
+      {items.map(s => {
+        const Icn = s.icon;
+        const isActive = active === s.id;
+        return (
+          <button key={s.id} onClick={() => onChange(s.id)}
+            className="flex items-center gap-2 px-4 py-2 text-sm transition-all whitespace-nowrap"
+            style={{
+              fontFamily:"'Fraunces', serif", fontWeight:600,
+              border:`1.5px solid ${isActive ? COLORS.forest : COLORS.forest + '30'}`,
+              backgroundColor:isActive ? COLORS.forest : 'transparent',
+              color:isActive ? '#fff8e8' : COLORS.forest,
+            }}>
+            <Icn size={14} /> {s.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function Flashcards({ items, kind, progress, onUpdate, renderFront, renderBack }) {
+  const [order, setOrder] = useState(() => items.map((_, i) => i));
+  const [idx, setIdx] = useState(0);
+  const [flipped, setFlipped] = useState(false);
+  const [filter, setFilter] = useState('all');
+  const visibleOrder = useMemo(() => {
+    return order.filter(i => {
+      const status = progress[items[i].id];
+      if (filter === 'review') return status === 'review';
+      if (filter === 'unseen') return !status;
+      return true;
+    });
+  }, [order, progress, filter, items]);
+  const safeIdx = Math.min(idx, Math.max(0, visibleOrder.length - 1));
+  const current = visibleOrder.length > 0 ? items[visibleOrder[safeIdx]] : null;
+  const next = () => { setFlipped(false); setTimeout(() => setIdx(i => (i + 1) % Math.max(visibleOrder.length, 1)), 100); };
+  const prev = () => { setFlipped(false); setTimeout(() => setIdx(i => (i - 1 + visibleOrder.length) % Math.max(visibleOrder.length, 1)), 100); };
+  const shuffle = () => { setOrder([...order].sort(() => Math.random() - 0.5)); setIdx(0); setFlipped(false); };
+  const mark = (status) => { if (!current) return; onUpdate(current.id, status); next(); };
+  const status = current ? progress[current.id] : null;
+  return (
+    <div>
+      <div className="flex flex-wrap gap-3 items-center justify-between mb-5">
+        <h2 className="text-2xl sm:text-3xl" style={{ fontFamily:"'Fraunces', serif", fontWeight:800, color:COLORS.forest, letterSpacing:'-0.02em' }}>
+          {kind === 'works' ? 'Major Works.' : 'Forms & Movements.'}
+        </h2>
+        <div className="flex gap-2 items-center text-xs" style={{ fontFamily:"'JetBrains Mono', monospace" }}>
+          {['all', 'review', 'unseen'].map(f => (
+            <button key={f} onClick={() => { setFilter(f); setIdx(0); }}
+              className="px-3 py-1.5 border uppercase tracking-wider"
+              style={{
+                borderColor:filter === f ? COLORS.forest : COLORS.forest + '40',
+                backgroundColor:filter === f ? COLORS.forest : 'transparent',
+                color:filter === f ? '#fff8e8' : COLORS.forest,
+              }}>{f}</button>
+          ))}
+          <button onClick={shuffle} className="p-2 border" style={{ borderColor:COLORS.forest + '40', color:COLORS.forest }}>
+            <Shuffle size={14} />
+          </button>
+        </div>
+      </div>
+      {visibleOrder.length === 0 ? (
+        <div className="border-2 border-dashed p-16 text-center" style={{ borderColor:COLORS.forest + '40' }}>
+          <p style={{ fontFamily:"'Fraunces', serif", fontSize:'1.25rem', color:COLORS.forest }} className="italic">
+            Nothing here — try a different filter.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="relative" style={{ perspective:'1600px' }}>
+            <div onClick={() => setFlipped(f => !f)}
+              className="cursor-pointer min-h-[460px] transition-transform duration-500"
+              style={{ transformStyle:'preserve-3d', transform:flipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}>
+              <div className="absolute inset-0 p-6 sm:p-9 border-2 flex flex-col"
+                style={{ backfaceVisibility:'hidden', borderColor:COLORS.forest, backgroundColor:'#fdfaf0', boxShadow:'6px 6px 0 ' + COLORS.forest }}>
+                {renderFront(current)}
+                <div className="mt-auto pt-5 flex items-center justify-between text-xs" style={{ fontFamily:"'JetBrains Mono', monospace", color:COLORS.forest + 'aa' }}>
+                  <span className="flex items-center gap-1.5"><Eye size={12} /> Tap to reveal</span>
+                  <span>{safeIdx + 1} / {visibleOrder.length}</span>
+                </div>
+              </div>
+              <div className="absolute inset-0 p-6 sm:p-9 border-2 overflow-y-auto"
+                style={{ backfaceVisibility:'hidden', transform:'rotateY(180deg)', borderColor:COLORS.oxblood, backgroundColor:'#fff8e8', boxShadow:'6px 6px 0 ' + COLORS.oxblood }}>
+                {renderBack(current)}
+                <div className="mt-5 pt-3 border-t flex items-center justify-between text-xs" style={{ borderColor:COLORS.oxblood + '40', fontFamily:"'JetBrains Mono', monospace", color:COLORS.oxblood }}>
+                  <span className="flex items-center gap-1.5"><EyeOff size={12} /> Tap to flip back</span>
+                  <span>{safeIdx + 1} / {visibleOrder.length}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="mt-5 flex flex-wrap gap-3 items-center justify-between">
+            <div className="flex gap-2">
+              <button onClick={prev} className="p-3 border-2" style={{ borderColor:COLORS.forest, color:COLORS.forest }}>
+                <ChevronLeft size={18} />
+              </button>
+              <button onClick={next} className="p-3 border-2" style={{ borderColor:COLORS.forest, color:COLORS.forest }}>
+                <ChevronRight size={18} />
+              </button>
+            </div>
+            <div className="text-xs" style={{ fontFamily:"'JetBrains Mono', monospace" }}>
+              {status === 'mastered' && <span style={{ color:COLORS.oxblood }}>● Mastered</span>}
+              {status === 'review' && <span style={{ color:COLORS.gold }}>● Needs review</span>}
+              {!status && <span style={{ opacity:0.6 }}>● Unseen</span>}
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => mark('review')}
+                className="flex items-center gap-2 px-4 py-3 border-2 text-sm"
+                style={{ borderColor:COLORS.gold, color:COLORS.forest, fontFamily:"'Fraunces', serif", fontWeight:600 }}>
+                <RotateCcw size={15} /> Review again
+              </button>
+              <button onClick={() => mark('mastered')}
+                className="flex items-center gap-2 px-4 py-3 text-sm"
+                style={{ backgroundColor:COLORS.forest, color:'#fff8e8', fontFamily:"'Fraunces', serif", fontWeight:600 }}>
+                <Check size={15} /> Got it
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function WorkFront({ w }) {
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex items-baseline gap-3 text-xs flex-wrap" style={{ fontFamily:"'JetBrains Mono', monospace", color:COLORS.forest + '99' }}>
+        <span style={{ color:COLORS.oxblood }}>{w.year}</span><span>·</span><span>{w.period}</span><span>·</span><span style={{ color:COLORS.gold }}>{w.genre}</span>
+      </div>
+      <div className="mt-3 text-3xl sm:text-4xl leading-tight" style={{ fontFamily:"'Fraunces', serif", fontWeight:800, color:COLORS.forest, letterSpacing:'-0.02em' }}>
+        {w.title}
+      </div>
+      <div className="mt-1 text-base italic" style={{ fontFamily:"'Fraunces', serif", color:COLORS.forest + 'cc' }}>
+        {w.author}
+      </div>
+      <div className="mt-auto pt-6 italic text-sm sm:text-base" style={{ fontFamily:"'Fraunces', serif", color:COLORS.forest + 'cc' }}>
+        Recall the plot, themes, techniques, and what makes this Q3-friendly.
+      </div>
+    </div>
+  );
+}
+
+function WorkBack({ w }) {
+  return (
+    <div>
+      <div className="text-xl sm:text-2xl mb-1" style={{ fontFamily:"'Fraunces', serif", fontWeight:700, color:COLORS.forest }}>
+        {w.title} <span className="opacity-50 text-sm" style={{ fontFamily:"'JetBrains Mono', monospace" }}>({w.year})</span>
+      </div>
+      <div className="text-sm italic mb-3 opacity-70" style={{ fontFamily:"'Fraunces', serif" }}>{w.author}</div>
+      <Section label="Summary" body={w.summary} />
+      <ListSection label="Themes" items={w.themes} />
+      <ListSection label="Techniques" items={w.techniques} />
+      <Section label="Why It's Tested" body={w.whyTested} accent />
+    </div>
+  );
+}
+
+function ConceptFront({ c }) {
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex items-baseline gap-3 text-xs" style={{ fontFamily:"'JetBrains Mono', monospace", color:COLORS.forest + '99' }}>
+        <span style={{ color:COLORS.oxblood }}>{c.kind.toUpperCase()}</span><span>·</span><span style={{ color:COLORS.gold }}>{c.era}</span>
+      </div>
+      <div className="mt-3 text-3xl sm:text-4xl leading-tight" style={{ fontFamily:"'Fraunces', serif", fontWeight:800, color:COLORS.forest, letterSpacing:'-0.02em' }}>
+        {c.name}
+      </div>
+      <div className="mt-auto pt-6 italic text-sm sm:text-base" style={{ fontFamily:"'Fraunces', serif", color:COLORS.forest + 'cc' }}>
+        State the defining features and key examples.
+      </div>
+    </div>
+  );
+}
+
+function ConceptBack({ c }) {
+  return (
+    <div>
+      <div className="text-xl sm:text-2xl mb-3" style={{ fontFamily:"'Fraunces', serif", fontWeight:700, color:COLORS.forest }}>
+        {c.name}
+      </div>
+      <Section label="Summary" body={c.summary} />
+      <ListSection label="Key Ideas" items={c.keyIdeas} />
+      <Section label="Examples" body={c.examples} accent />
+    </div>
+  );
+}
+
+function Section({ label, body, accent }) {
+  return (
+    <div className="mb-3">
+      <div className="text-[10px] uppercase tracking-[0.2em] mb-1" style={{ color:COLORS.oxblood, fontFamily:"'JetBrains Mono', monospace" }}>{label}</div>
+      <p className="text-sm leading-relaxed" style={{ fontFamily:"'Fraunces', serif", color:COLORS.forest, fontWeight:accent ? 600 : 400 }}>
+        {body}
+      </p>
+    </div>
+  );
+}
+
+function ListSection({ label, items }) {
+  return (
+    <div className="mb-3">
+      <div className="text-[10px] uppercase tracking-[0.2em] mb-1.5" style={{ color:COLORS.oxblood, fontFamily:"'JetBrains Mono', monospace" }}>{label}</div>
+      <ul className="space-y-1 text-sm" style={{ fontFamily:"'Fraunces', serif" }}>
+        {items.map((k, i) => (
+          <li key={i} className="flex gap-2">
+            <span style={{ color:COLORS.oxblood }}>§</span><span>{k}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function DevicesView({ progress, onUpdate }) {
+  const [activeCat, setActiveCat] = useState(1);
+  const catDevices = DEVICES.filter(d => d.cat === activeCat);
+  return (
+    <div>
+      <h2 className="text-2xl sm:text-3xl mb-5" style={{ fontFamily:"'Fraunces', serif", fontWeight:800, color:COLORS.forest, letterSpacing:'-0.02em' }}>
+        Devices by Category.
+      </h2>
+      <div className="flex flex-wrap gap-2 mb-5">
+        {[1,2,3,4,5,6].map(c => (
+          <button key={c} onClick={() => setActiveCat(c)}
+            className="px-3 py-1.5 text-xs sm:text-sm border-2 transition-all"
+            style={{
+              fontFamily:"'Fraunces', serif", fontWeight:600,
+              borderColor:activeCat === c ? COLORS.forest : COLORS.forest + '30',
+              backgroundColor:activeCat === c ? COLORS.forest : 'transparent',
+              color:activeCat === c ? '#fff8e8' : COLORS.forest,
+            }}>
+            {CAT_NAMES[c]}
+          </button>
+        ))}
+      </div>
+      <div className="grid sm:grid-cols-2 gap-3">
+        {catDevices.map((t) => {
+          const id = `c${t.cat}-${t.term}`;
+          const status = progress[id];
+          return (
+            <div key={id} className="p-4 border transition-all"
+              style={{ borderColor:status === 'mastered' ? COLORS.oxblood : COLORS.forest + '40', backgroundColor:status === 'mastered' ? '#fff8e8' : '#fdfaf0' }}>
+              <div className="flex justify-between items-start gap-3">
+                <div className="text-base leading-snug" style={{ fontFamily:"'Fraunces', serif", fontWeight:700, color:COLORS.forest }}>{t.term}</div>
+                <button onClick={() => onUpdate(id, status === 'mastered' ? null : 'mastered')}
+                  className="shrink-0 p-1.5 border"
+                  style={{
+                    borderColor:status === 'mastered' ? COLORS.oxblood : COLORS.forest + '40',
+                    backgroundColor:status === 'mastered' ? COLORS.oxblood : 'transparent',
+                    color:status === 'mastered' ? '#fff8e8' : COLORS.forest,
+                  }}>
+                  <Check size={12} />
+                </button>
+              </div>
+              <p className="mt-1.5 text-sm leading-relaxed" style={{ fontFamily:"'Fraunces', serif", color:COLORS.forest + 'dd' }}>{t.def}</p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function DrillHub({ sub, setSub, stats, updateStats, addXP }) {
+  const subs = [
+    { id:'speed', label:'Speed', icon:Zap },
+    { id:'identify', label:'Device ID', icon:Quote },
+    { id:'closeread', label:'Close Read', icon:BookOpen },
+    { id:'frq', label:'FRQ', icon:PenLine },
+  ];
+  return (
+    <div className="pt-6">
+      <SubNav items={subs} active={sub} onChange={setSub} />
+      {sub === 'speed' && <SpeedRound stats={stats} updateStats={updateStats} addXP={addXP} />}
+      {sub === 'identify' && <IdentifyGame addXP={addXP} />}
+      {sub === 'closeread' && <CloseReadGame addXP={addXP} />}
+      {sub === 'frq' && <FRQPractice addXP={addXP} />}
+    </div>
+  );
+}
+
+function SpeedRound({ stats, updateStats, addXP }) {
+  const [phase, setPhase] = useState('intro');
+  const [questions, setQuestions] = useState([]);
+  const [idx, setIdx] = useState(0);
+  const [lives, setLives] = useState(3);
+  const [score, setScore] = useState(0);
+  const [combo, setCombo] = useState(0);
+  const [topCombo, setTopCombo] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(15);
+  const [selected, setSelected] = useState(null);
+  const [feedback, setFeedback] = useState(null);
+  const timerRef = useRef(null);
+  const start = () => {
+    setQuestions([...SPEED_QUESTIONS].sort(() => Math.random() - 0.5));
+    setIdx(0); setLives(3); setScore(0); setCombo(0); setTopCombo(0);
+    setTimeLeft(15); setSelected(null); setFeedback(null);
+    setPhase('playing');
+  };
+  useEffect(() => {
+    if (phase !== 'playing') return;
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setTimeLeft(t => { if (t <= 0.1) return 0; return +(t - 0.1).toFixed(1); });
+    }, 100);
+    return () => clearInterval(timerRef.current);
+  }, [phase, idx]);
+  useEffect(() => {
+    if (phase === 'playing' && timeLeft <= 0 && selected === null) handleAnswer(-1);
+  }, [timeLeft]);
+  const handleAnswer = (i) => {
+    if (selected !== null || phase !== 'playing') return;
+    const q = questions[idx];
+    const isRight = i === q.correct;
+    setSelected(i);
+    setFeedback(isRight ? 'right' : 'wrong');
+    if (isRight) {
+      const newCombo = combo + 1;
+      const mult = 1 + Math.floor(newCombo / 3) * 0.5;
+      const points = Math.round(10 * mult * (timeLeft / 15 + 0.5));
+      setCombo(newCombo);
+      setTopCombo(c => Math.max(c, newCombo));
+      setScore(s => s + points);
+    } else {
+      setCombo(0);
+      setLives(l => l - 1);
+    }
+    setTimeout(() => {
+      const newLives = isRight ? lives : lives - 1;
+      const isLastQ = idx + 1 >= questions.length;
+      if (newLives <= 0 || isLastQ) {
+        finish(isRight ? score + Math.round(10 * (1 + Math.floor((combo + 1) / 3) * 0.5) * (timeLeft / 15 + 0.5)) : score, Math.max(topCombo, isRight ? combo + 1 : combo));
+      } else {
+        setIdx(i => i + 1); setSelected(null); setFeedback(null); setTimeLeft(15);
+      }
+    }, 800);
+  };
+  const finish = (finalScore, finalCombo) => {
+    setPhase('over');
+    const patch = {};
+    if (finalScore > (stats.speedBest || 0)) patch.speedBest = finalScore;
+    if (finalCombo > (stats.comboBest || 0)) patch.comboBest = finalCombo;
+    let badge = null;
+    if (!stats.badges?.firstSpeed) badge = 'firstSpeed';
+    else if (finalCombo >= 10 && !stats.badges?.combo10) badge = 'combo10';
+    else if (lives === 3 && finalScore > 0 && !stats.badges?.perfectSpeed) badge = 'perfectSpeed';
+    updateStats(patch, badge);
+    addXP(Math.floor(finalScore / 10));
+  };
+  if (phase === 'intro') {
+    return (
+      <div className="text-center py-12">
+        <Zap size={56} className="mx-auto mb-3" style={{ color:COLORS.oxblood }} />
+        <h2 className="text-4xl sm:text-5xl" style={{ fontFamily:"'Fraunces', serif", fontWeight:800, color:COLORS.forest, letterSpacing:'-0.03em' }}>
+          Speed Round
+        </h2>
+        <p className="mt-3 max-w-md mx-auto" style={{ fontFamily:"'Fraunces', serif", fontSize:'1.05rem' }}>
+          25 quick questions. <strong>15 seconds each.</strong> 3 lives. Build combos.
+        </p>
+        <div className="mt-6 grid grid-cols-3 gap-3 max-w-md mx-auto text-xs" style={{ fontFamily:"'JetBrains Mono', monospace" }}>
+          <div className="border p-3" style={{ borderColor:COLORS.forest + '40' }}>
+            <div className="opacity-60">Best Score</div>
+            <div className="text-xl mt-0.5" style={{ fontFamily:"'Fraunces', serif", fontWeight:700, color:COLORS.oxblood }}>{stats.speedBest || 0}</div>
+          </div>
+          <div className="border p-3" style={{ borderColor:COLORS.forest + '40' }}>
+            <div className="opacity-60">Top Combo</div>
+            <div className="text-xl mt-0.5" style={{ fontFamily:"'Fraunces', serif", fontWeight:700, color:COLORS.gold }}>{stats.comboBest || 0}x</div>
+          </div>
+          <div className="border p-3" style={{ borderColor:COLORS.forest + '40' }}>
+            <div className="opacity-60">Mult/3</div>
+            <div className="text-xl mt-0.5" style={{ fontFamily:"'Fraunces', serif", fontWeight:700, color:COLORS.forest }}>+0.5x</div>
+          </div>
+        </div>
+        <button onClick={start}
+          className="mt-8 px-7 py-3.5 inline-flex items-center gap-2 transition-transform hover:scale-105"
+          style={{ backgroundColor:COLORS.oxblood, color:'#fff8e8', fontFamily:"'Fraunces', serif", fontWeight:700, fontSize:'1.05rem' }}>
+          <Zap size={18} /> Start Round
+        </button>
+      </div>
+    );
+  }
+  if (phase === 'over') {
+    return (
+      <div className="text-center py-12">
+        <div className="text-xs uppercase tracking-[0.25em]" style={{ color:COLORS.oxblood, fontFamily:"'JetBrains Mono', monospace" }}>
+          {lives <= 0 ? 'Eliminated' : 'Run Complete'}
+        </div>
+        {lives <= 0 && <Skull size={48} className="mx-auto mt-3" style={{ color:COLORS.oxblood }} />}
+        <div className="text-7xl sm:text-8xl mt-4" style={{ fontFamily:"'Fraunces', serif", fontWeight:900, color:COLORS.forest, letterSpacing:'-0.04em' }}>
+          {score}
+        </div>
+        <div className="mt-1 text-sm opacity-70" style={{ fontFamily:"'JetBrains Mono', monospace" }}>
+          Top combo: {topCombo}x
+        </div>
+        {score > (stats.speedBest || 0) && (
+          <div className="mt-3 inline-block px-3 py-1.5 text-xs" style={{ backgroundColor:COLORS.gold, color:COLORS.forest, fontFamily:"'JetBrains Mono', monospace", fontWeight:700 }}>
+            ★ NEW HIGH SCORE
+          </div>
+        )}
+        <div className="mt-2 text-sm" style={{ fontFamily:"'Fraunces', serif", color:COLORS.oxblood }}>
+          +{Math.floor(score / 10)} XP
+        </div>
+        <button onClick={start}
+          className="mt-8 px-6 py-3 inline-flex items-center gap-2"
+          style={{ backgroundColor:COLORS.forest, color:'#fff8e8', fontFamily:"'Fraunces', serif", fontWeight:600 }}>
+          <RotateCcw size={16} /> Play Again
+        </button>
+      </div>
+    );
+  }
+  const q = questions[idx];
+  const mult = 1 + Math.floor(combo / 3) * 0.5;
+  const lowTime = timeLeft <= 5;
+  return (
+    <div className="max-w-2xl mx-auto">
+      <div className="grid grid-cols-3 gap-2 mb-4 text-xs" style={{ fontFamily:"'JetBrains Mono', monospace" }}>
+        <div className="border-2 p-2.5" style={{ borderColor:COLORS.forest }}>
+          <div className="opacity-60 text-[10px] uppercase">Lives</div>
+          <div className="flex gap-1 mt-1">
+            {[0,1,2].map(i => <Heart key={i} size={16} fill={i < lives ? COLORS.oxblood : 'none'} style={{ color:COLORS.oxblood }} />)}
+          </div>
+        </div>
+        <div className="border-2 p-2.5" style={{ borderColor:combo >= 3 ? COLORS.gold : COLORS.forest + '40' }}>
+          <div className="opacity-60 text-[10px] uppercase">Combo</div>
+          <div className="text-xl mt-0.5" style={{ fontFamily:"'Fraunces', serif", fontWeight:800, color:combo >= 3 ? COLORS.gold : COLORS.forest }}>
+            {combo}x {combo >= 3 && <span className="text-[10px]" style={{ color:COLORS.oxblood }}>·{mult}x</span>}
+          </div>
+        </div>
+        <div className="border-2 p-2.5" style={{ borderColor:COLORS.forest }}>
+          <div className="opacity-60 text-[10px] uppercase">Score</div>
+          <div className="text-xl mt-0.5" style={{ fontFamily:"'Fraunces', serif", fontWeight:800, color:COLORS.forest }}>{score}</div>
+        </div>
+      </div>
+      <div className="h-2 mb-4 relative overflow-hidden" style={{ backgroundColor:COLORS.forest + '20' }}>
+        <div className="h-full transition-all" style={{ width:(timeLeft / 15 * 100) + '%', backgroundColor:lowTime ? COLORS.oxblood : COLORS.gold }} />
+      </div>
+      <div className="border-2 p-6 sm:p-8 transition-all"
+        style={{
+          borderColor:feedback === 'right' ? COLORS.forest : feedback === 'wrong' ? COLORS.oxblood : COLORS.forest,
+          backgroundColor:feedback === 'right' ? '#e8f0e0' : feedback === 'wrong' ? '#fff0ec' : '#fdfaf0',
+          boxShadow:'5px 5px 0 ' + (feedback === 'wrong' ? COLORS.oxblood : COLORS.forest),
+        }}>
+        <div className="flex items-baseline justify-between text-xs mb-3" style={{ fontFamily:"'JetBrains Mono', monospace" }}>
+          <span style={{ color:COLORS.oxblood }}>QUESTION {idx + 1} / {questions.length}</span>
+          <span style={{ color:lowTime ? COLORS.oxblood : COLORS.forest + 'aa', fontWeight:700 }}>{timeLeft.toFixed(1)}s</span>
+        </div>
+        <p className="text-xl sm:text-2xl leading-snug" style={{ fontFamily:"'Fraunces', serif", fontWeight:600, color:COLORS.forest }}>
+          {q.q}
+        </p>
+        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {q.options.map((opt, i) => {
+            let bg = '#fff8e8', border = COLORS.forest + '40', color = COLORS.forest;
+            const isSelected = selected === i;
+            const isCorrect = i === q.correct;
+            if (selected !== null && isCorrect) { border = COLORS.forest; bg = '#d8e6c8'; }
+            else if (selected !== null && isSelected && !isCorrect) { border = COLORS.oxblood; bg = '#fdd6d0'; color = COLORS.oxblood; }
+            return (
+              <button key={i} onClick={() => handleAnswer(i)} disabled={selected !== null}
+                className="text-left p-3 border-2 transition-all flex gap-3 items-start text-sm"
+                style={{ borderColor:border, backgroundColor:bg, color, fontFamily:"'Fraunces', serif", cursor:selected !== null ? 'default' : 'pointer' }}>
+                <span className="text-xs mt-0.5 opacity-60" style={{ fontFamily:"'JetBrains Mono', monospace" }}>{String.fromCharCode(65 + i)}</span>
+                <span className="flex-1">{opt}</span>
+                {selected !== null && isCorrect && <Check size={16} />}
+                {selected !== null && isSelected && !isCorrect && <XIcon size={16} />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function IdentifyGame({ addXP }) {
+  const [questions] = useState(() => [...COMPARISONS].sort(() => Math.random() - 0.5).slice(0, 8));
+  const [idx, setIdx] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [score, setScore] = useState(0);
+  const [done, setDone] = useState(false);
+  const q = questions[idx];
+  const submit = (opt) => { if (selected !== null) return; setSelected(opt); if (opt === q.correct) setScore(s => s + 1); };
+  const advance = () => {
+    if (idx + 1 >= questions.length) { setDone(true); addXP(score * 5); }
+    else { setIdx(idx + 1); setSelected(null); }
+  };
+  if (done) {
+    const pct = Math.round(score / questions.length * 100);
+    return (
+      <div className="text-center py-12">
+        <Quote size={48} className="mx-auto mb-3" style={{ color:COLORS.forest }} />
+        <div className="text-7xl" style={{ fontFamily:"'Fraunces', serif", fontWeight:900, color:COLORS.forest }}>
+          {score}<span className="text-3xl opacity-50">/{questions.length}</span>
+        </div>
+        <div className="mt-1 text-2xl italic" style={{ fontFamily:"'Fraunces', serif", color:COLORS.oxblood }}>
+          {pct >= 87 ? 'Sharp eye for craft.' : pct >= 62 ? 'Solid reader.' : 'Back to the syllabus.'}
+        </div>
+        <div className="mt-2 text-sm" style={{ fontFamily:"'Fraunces', serif", color:COLORS.oxblood }}>+{score * 5} XP</div>
+        <button onClick={() => window.location.reload()}
+          className="mt-6 px-5 py-2.5 inline-flex items-center gap-2"
+          style={{ backgroundColor:COLORS.forest, color:'#fff8e8', fontFamily:"'Fraunces', serif", fontWeight:600 }}>
+          <RotateCcw size={16} /> New Round
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="max-w-3xl mx-auto">
+      <div className="flex justify-between items-baseline mb-4">
+        <div>
+          <div className="text-xs uppercase tracking-[0.25em]" style={{ color:COLORS.oxblood, fontFamily:"'JetBrains Mono', monospace" }}>
+            Device ID · {idx + 1} / {questions.length}
+          </div>
+          <h2 className="text-2xl sm:text-3xl mt-1" style={{ fontFamily:"'Fraunces', serif", fontWeight:800, color:COLORS.forest, letterSpacing:'-0.02em' }}>
+            Which device is at work?
+          </h2>
+        </div>
+        <div className="text-xs" style={{ fontFamily:"'JetBrains Mono', monospace" }}>Score: {score}</div>
+      </div>
+      <div className="border-l-4 p-5 mb-5" style={{ borderColor:COLORS.gold, backgroundColor:'#fff8e8' }}>
+        <div className="text-[10px] uppercase tracking-[0.2em] mb-2" style={{ color:COLORS.oxblood, fontFamily:"'JetBrains Mono', monospace" }}>Snippet</div>
+        <p className="text-base sm:text-lg leading-relaxed italic" style={{ fontFamily:"'Fraunces', serif", color:COLORS.forest }}>
+          {q.snippet}
+        </p>
+      </div>
+      <div className="grid sm:grid-cols-2 gap-3">
+        {q.options.map(opt => {
+          const isSelected = selected === opt;
+          const isCorrect = q.correct === opt;
+          let border = COLORS.forest + '40', bg = '#fdfaf0';
+          if (selected && isCorrect) { border = COLORS.forest; bg = '#d8e6c8'; }
+          else if (selected && isSelected && !isCorrect) { border = COLORS.oxblood; bg = '#fdd6d0'; }
+          return (
+            <button key={opt} onClick={() => submit(opt)} disabled={selected !== null}
+              className="text-left p-4 border-2 transition-all"
+              style={{ borderColor:border, backgroundColor:bg, cursor:selected !== null ? 'default' : 'pointer' }}>
+              <div className="text-base" style={{ fontFamily:"'Fraunces', serif", fontWeight:700, color:COLORS.forest }}>
+                {opt}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      {selected && (
+        <>
+          <div className="mt-5 p-5 border-l-4" style={{ borderColor:selected === q.correct ? COLORS.forest : COLORS.oxblood, backgroundColor:'#fff0ec55' }}>
+            <div className="text-[10px] uppercase tracking-[0.2em] mb-1.5" style={{ color:COLORS.oxblood, fontFamily:"'JetBrains Mono', monospace" }}>
+              {selected === q.correct ? 'Correct' : 'Answer: ' + q.correct}
+            </div>
+            <p className="text-sm leading-relaxed" style={{ fontFamily:"'Fraunces', serif", color:COLORS.forest }}>
+              {q.explain}
+            </p>
+          </div>
+          <div className="mt-5 flex justify-end">
+            <button onClick={advance}
+              className="px-6 py-3 flex items-center gap-2"
+              style={{ backgroundColor:COLORS.forest, color:'#fff8e8', fontFamily:"'Fraunces', serif", fontWeight:600 }}>
+              {idx + 1 >= questions.length ? 'See Results' : 'Next'} <ArrowRight size={16} />
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function CloseReadGame({ addXP }) {
+  const [questions] = useState(() => [...APPLICATIONS].sort(() => Math.random() - 0.5).slice(0, 8));
+  const [idx, setIdx] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [score, setScore] = useState(0);
+  const [done, setDone] = useState(false);
+  const q = questions[idx];
+  const submit = (i) => { if (selected !== null) return; setSelected(i); if (i === q.correct) setScore(s => s + 1); };
+  const advance = () => {
+    if (idx + 1 >= questions.length) { setDone(true); addXP(score * 5); }
+    else { setIdx(idx + 1); setSelected(null); }
+  };
+  if (done) {
+    const pct = Math.round(score / questions.length * 100);
+    return (
+      <div className="text-center py-12">
+        <BookOpen size={48} className="mx-auto mb-3" style={{ color:COLORS.forest }} />
+        <div className="text-7xl" style={{ fontFamily:"'Fraunces', serif", fontWeight:900, color:COLORS.forest }}>
+          {score}<span className="text-3xl opacity-50">/{questions.length}</span>
+        </div>
+        <div className="mt-1 text-2xl italic" style={{ fontFamily:"'Fraunces', serif", color:COLORS.oxblood }}>
+          {pct >= 87 ? 'Sharp critical reading.' : pct >= 62 ? 'Solid analysis.' : 'Slow it down. Read again.'}
+        </div>
+        <div className="mt-2 text-sm" style={{ fontFamily:"'Fraunces', serif", color:COLORS.oxblood }}>+{score * 5} XP</div>
+        <button onClick={() => window.location.reload()}
+          className="mt-6 px-5 py-2.5 inline-flex items-center gap-2"
+          style={{ backgroundColor:COLORS.forest, color:'#fff8e8', fontFamily:"'Fraunces', serif", fontWeight:600 }}>
+          <RotateCcw size={16} /> New Round
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="max-w-3xl mx-auto">
+      <div className="flex justify-between items-baseline mb-4">
+        <div>
+          <div className="text-xs uppercase tracking-[0.25em]" style={{ color:COLORS.oxblood, fontFamily:"'JetBrains Mono', monospace" }}>
+            Close Read · {idx + 1} / {questions.length}
+          </div>
+          <h2 className="text-2xl sm:text-3xl mt-1" style={{ fontFamily:"'Fraunces', serif", fontWeight:800, color:COLORS.forest, letterSpacing:'-0.02em' }}>
+            Read carefully.
+          </h2>
+        </div>
+        <div className="text-xs" style={{ fontFamily:"'JetBrains Mono', monospace" }}>Score: {score}</div>
+      </div>
+      <div className="border-2 p-5 mb-5" style={{ borderColor:COLORS.forest, backgroundColor:'#fdfaf0' }}>
+        <div className="text-[10px] uppercase tracking-[0.2em] mb-2" style={{ color:COLORS.oxblood, fontFamily:"'JetBrains Mono', monospace" }}>Passage</div>
+        <p className="text-base leading-relaxed italic" style={{ fontFamily:"'Fraunces', serif", color:COLORS.forest }}>
+          {q.passage}
+        </p>
+        <div className="mt-4 pt-4 border-t" style={{ borderColor:COLORS.forest + '30' }}>
+          <p className="text-base sm:text-lg leading-snug" style={{ fontFamily:"'Fraunces', serif", fontWeight:700, color:COLORS.forest }}>
+            {q.q}
+          </p>
+        </div>
+      </div>
+      <div className="space-y-2.5">
+        {q.options.map((opt, i) => {
+          let border = COLORS.forest + '40', bg = '#fff8e8', color = COLORS.forest;
+          const isSelected = selected === i;
+          const isCorrect = i === q.correct;
+          if (selected !== null && isCorrect) { border = COLORS.forest; bg = '#d8e6c8'; }
+          else if (selected !== null && isSelected && !isCorrect) { border = COLORS.oxblood; bg = '#fdd6d0'; color = COLORS.oxblood; }
+          return (
+            <button key={i} onClick={() => submit(i)} disabled={selected !== null}
+              className="w-full text-left p-3.5 border-2 transition-all flex gap-3 items-start"
+              style={{ borderColor:border, backgroundColor:bg, color, cursor:selected !== null ? 'default' : 'pointer' }}>
+              <span className="text-xs mt-0.5 opacity-60" style={{ fontFamily:"'JetBrains Mono', monospace" }}>{String.fromCharCode(65 + i)}</span>
+              <span className="flex-1 text-sm" style={{ fontFamily:"'Fraunces', serif" }}>{opt}</span>
+              {selected !== null && isCorrect && <Check size={16} />}
+              {selected !== null && isSelected && !isCorrect && <XIcon size={16} />}
+            </button>
+          );
+        })}
+      </div>
+      {selected !== null && (
+        <>
+          <div className="mt-5 p-4 border-l-4" style={{ borderColor:COLORS.oxblood, backgroundColor:'#fff0ec55' }}>
+            <div className="text-[10px] uppercase tracking-[0.2em] mb-1" style={{ color:COLORS.oxblood, fontFamily:"'JetBrains Mono', monospace" }}>Explanation</div>
+            <p className="text-sm leading-relaxed" style={{ fontFamily:"'Fraunces', serif", color:COLORS.forest }}>{q.explain}</p>
+          </div>
+          <div className="mt-5 flex justify-end">
+            <button onClick={advance}
+              className="px-6 py-3 flex items-center gap-2"
+              style={{ backgroundColor:COLORS.forest, color:'#fff8e8', fontFamily:"'Fraunces', serif", fontWeight:600 }}>
+              {idx + 1 >= questions.length ? 'See Results' : 'Next'} <ArrowRight size={16} />
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function FRQPractice({ addXP }) {
+  const [promptIdx, setPromptIdx] = useState(0);
+  const [text, setText] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const [scored, setScored] = useState({});
+  const [showRubric, setShowRubric] = useState(false);
+  const prompt = FRQ_PROMPTS[promptIdx];
+  const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+  const totalPoints = Object.values(scored).filter(Boolean).length;
+  const maxPoints = prompt.rubric.length;
+  const submit = () => { setSubmitted(true); setShowRubric(true); window.scrollTo({ top:0, behavior:'smooth' }); };
+  const grade = (id, val) => {
+    const next = { ...scored, [id]: val };
+    setScored(next);
+    if (Object.keys(next).length === maxPoints) addXP(Object.values(next).filter(Boolean).length * 3);
+  };
+  const reset = () => {
+    setPromptIdx((promptIdx + 1) % FRQ_PROMPTS.length);
+    setText(''); setSubmitted(false); setScored({}); setShowRubric(false);
+  };
+  return (
+    <div className="max-w-3xl mx-auto">
+      <div className="flex justify-between items-baseline mb-4">
+        <div>
+          <div className="text-xs uppercase tracking-[0.25em]" style={{ color:COLORS.oxblood, fontFamily:"'JetBrains Mono', monospace" }}>
+            FRQ Practice
+          </div>
+          <h2 className="text-2xl sm:text-3xl mt-1" style={{ fontFamily:"'Fraunces', serif", fontWeight:800, color:COLORS.forest, letterSpacing:'-0.02em' }}>
+            {prompt.title}
+          </h2>
+        </div>
+        <button onClick={reset} className="text-xs px-3 py-1.5 border" style={{ borderColor:COLORS.forest + '40', fontFamily:"'JetBrains Mono', monospace", color:COLORS.forest }}>
+          Next Prompt
+        </button>
+      </div>
+      <div className="border-2 p-5 mb-4" style={{ borderColor:COLORS.forest, backgroundColor:'#fdfaf0' }}>
+        <div className="text-[10px] uppercase tracking-[0.2em] mb-2" style={{ color:COLORS.oxblood, fontFamily:"'JetBrains Mono', monospace" }}>Prompt</div>
+        <p className="text-base leading-relaxed mb-3" style={{ fontFamily:"'Fraunces', serif", color:COLORS.forest, fontWeight:600 }}>
+          {prompt.prompt}
+        </p>
+        {prompt.passage && (
+          <div className="border-l-4 pl-4 my-4 whitespace-pre-wrap" style={{ borderColor:COLORS.gold, fontFamily:"'Fraunces', serif", fontSize:'0.95rem', color:COLORS.forest, lineHeight:1.6 }}>
+            {prompt.passage}
+          </div>
+        )}
+        <p className="text-sm mt-3 italic opacity-80" style={{ fontFamily:"'Fraunces', serif" }}>
+          {prompt.instructions}
+        </p>
+      </div>
+      <textarea value={text} onChange={(e) => setText(e.target.value)} disabled={submitted}
+        placeholder="Begin your essay here. Strong responses: clear thesis, specific evidence, analysis (HOW techniques produce meaning), engagement with complexity."
+        className="w-full p-4 border-2 outline-none resize-y min-h-[280px]"
+        style={{ borderColor:submitted ? COLORS.forest + '40' : COLORS.forest, backgroundColor:'#fff8e8', fontFamily:"'Fraunces', serif", fontSize:'1rem', lineHeight:1.6, color:COLORS.forest }} />
+      <div className="flex justify-between items-center mt-2 text-xs" style={{ fontFamily:"'JetBrains Mono', monospace" }}>
+        <span className="opacity-60">{wordCount} words {wordCount < 250 && !submitted && '· aim for 400+'}</span>
+        {!submitted ? (
+          <button onClick={submit} disabled={wordCount < 50}
+            className="px-5 py-2.5 disabled:opacity-40"
+            style={{ backgroundColor:COLORS.oxblood, color:'#fff8e8', fontFamily:"'Fraunces', serif", fontWeight:600 }}>
+            Submit for self-grading
+          </button>
+        ) : (
+          <span style={{ color:COLORS.oxblood, fontWeight:700 }}>Submitted · Grade yourself below</span>
+        )}
+      </div>
+      {showRubric && (
+        <div className="mt-6 border-2 p-5" style={{ borderColor:COLORS.gold, backgroundColor:'#fff8e8' }}>
+          <div className="flex justify-between items-baseline mb-4">
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.2em]" style={{ color:COLORS.oxblood, fontFamily:"'JetBrains Mono', monospace" }}>Self-Grade Rubric</div>
+              <div className="text-xl mt-0.5" style={{ fontFamily:"'Fraunces', serif", fontWeight:700, color:COLORS.forest }}>
+                Be honest with yourself.
+              </div>
+            </div>
+            <div className="text-3xl" style={{ fontFamily:"'Fraunces', serif", fontWeight:800, color:COLORS.oxblood }}>
+              {totalPoints}<span className="text-base opacity-50">/{maxPoints}</span>
+            </div>
+          </div>
+          <div className="space-y-2.5">
+            {prompt.rubric.map(r => {
+              const v = scored[r.id];
+              return (
+                <div key={r.id} className="flex items-start gap-3 p-3 border" style={{ borderColor:v === true ? COLORS.forest : v === false ? COLORS.oxblood : COLORS.forest + '30', backgroundColor:'#fdfaf0' }}>
+                  <p className="flex-1 text-sm leading-snug" style={{ fontFamily:"'Fraunces', serif" }}>{r.label}</p>
+                  <div className="flex gap-1.5">
+                    <button onClick={() => grade(r.id, true)}
+                      className="p-1.5 border-2"
+                      style={{ borderColor:v === true ? COLORS.forest : COLORS.forest + '40', backgroundColor:v === true ? COLORS.forest : 'transparent', color:v === true ? '#fff8e8' : COLORS.forest }}>
+                      <Check size={14} />
+                    </button>
+                    <button onClick={() => grade(r.id, false)}
+                      className="p-1.5 border-2"
+                      style={{ borderColor:v === false ? COLORS.oxblood : COLORS.forest + '40', backgroundColor:v === false ? COLORS.oxblood : 'transparent', color:v === false ? '#fff8e8' : COLORS.forest }}>
+                      <XIcon size={14} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {Object.keys(scored).length === maxPoints && (
+            <div className="mt-4 p-3 text-center" style={{ backgroundColor:COLORS.forest, color:'#fff8e8' }}>
+              <div className="text-xs" style={{ fontFamily:"'JetBrains Mono', monospace" }}>
+                +{totalPoints * 3} XP earned
+              </div>
+              <div className="text-base mt-1" style={{ fontFamily:"'Fraunces', serif" }}>
+                {totalPoints === maxPoints ? 'Perfect rubric — you wrote a strong response.' :
+                 totalPoints >= 4 ? 'Solid essay. Tighten the gaps next time.' :
+                 'Review the missing elements and try another prompt.'}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BossMode({ stats, updateStats, addXP }) {
+  const [phase, setPhase] = useState('intro');
+  const [questions, setQuestions] = useState([]);
+  const [idx, setIdx] = useState(0);
+  const [answers, setAnswers] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(8 * 60);
+  const timerRef = useRef(null);
+  const buildExam = () => {
+    const mcq = [...HARD_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 10).map(q => ({ kind:'mcq', ...q }));
+    const ident = [...COMPARISONS].sort(() => Math.random() - 0.5).slice(0, 5).map(q => ({
+      kind:'ident',
+      passage:q.snippet,
+      q:'Which device is at work?',
+      options:q.options,
+      correct:q.options.indexOf(q.correct),
+      explain:q.explain,
+    }));
+    const cr = [...APPLICATIONS].sort(() => Math.random() - 0.5).slice(0, 5).map(q => ({
+      kind:'cr', passage:q.passage, q:q.q, options:q.options, correct:q.correct, explain:q.explain,
+    }));
+    return [...mcq, ...ident, ...cr].sort(() => Math.random() - 0.5);
+  };
+  const start = () => {
+    setQuestions(buildExam());
+    setIdx(0); setAnswers([]); setSelected(null); setTimeLeft(8 * 60);
+    setPhase('playing');
+  };
+  useEffect(() => {
+    if (phase !== 'playing') return;
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setTimeLeft(t => { if (t <= 1) { finish(answers); return 0; } return t - 1; });
+    }, 1000);
+    return () => clearInterval(timerRef.current);
+  }, [phase]);
+  const submitAnswer = (i) => { if (selected !== null) return; setSelected(i); };
+  const advance = () => {
+    const q = questions[idx];
+    const correct = selected === q.correct;
+    const next = [...answers, { idx, picked:selected, correct, q }];
+    setAnswers(next);
+    if (idx + 1 >= questions.length) finish(next);
+    else { setIdx(idx + 1); setSelected(null); }
+  };
+  const finish = (finalAnswers) => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    const correct = finalAnswers.filter(a => a.correct).length;
+    const score = Math.round(correct / questions.length * 100);
+    const patch = { bossAttempts: (stats.bossAttempts || 0) + 1, bossLast: score };
+    if (score > (stats.bossBest || 0)) patch.bossBest = score;
+    let badge = null;
+    if (score >= 70 && !stats.badges?.finalPass) badge = 'finalPass';
+    else if (score >= 90 && !stats.badges?.finalAce) badge = 'finalAce';
+    updateStats(patch, badge);
+    addXP(score);
+    setPhase('over');
+  };
+  if (phase === 'intro') {
+    return (
+      <div className="text-center py-12">
+        <Crown size={56} className="mx-auto mb-3" style={{ color:COLORS.oxblood }} />
+        <h2 className="text-4xl sm:text-6xl" style={{ fontFamily:"'Fraunces', serif", fontWeight:900, color:COLORS.forest, letterSpacing:'-0.04em' }}>
+          The Final Exam
+        </h2>
+        <p className="mt-3 max-w-md mx-auto" style={{ fontFamily:"'Fraunces', serif", fontSize:'1.05rem' }}>
+          20 questions. 8-minute timer. Mixed format: passage MCQ, device identification, close reading. <strong>No skipping.</strong>
+        </p>
+        <div className="mt-6 grid grid-cols-2 gap-3 max-w-sm mx-auto text-xs" style={{ fontFamily:"'JetBrains Mono', monospace" }}>
+          <div className="border p-3" style={{ borderColor:COLORS.forest + '40' }}>
+            <div className="opacity-60">Best Score</div>
+            <div className="text-2xl mt-0.5" style={{ fontFamily:"'Fraunces', serif", fontWeight:700, color:COLORS.oxblood }}>{stats.bossBest ? stats.bossBest + '%' : '—'}</div>
+          </div>
+          <div className="border p-3" style={{ borderColor:COLORS.forest + '40' }}>
+            <div className="opacity-60">Attempts</div>
+            <div className="text-2xl mt-0.5" style={{ fontFamily:"'Fraunces', serif", fontWeight:700, color:COLORS.forest }}>{stats.bossAttempts || 0}</div>
+          </div>
+        </div>
+        <button onClick={start}
+          className="mt-8 px-7 py-3.5 inline-flex items-center gap-2 transition-transform hover:scale-105"
+          style={{ backgroundColor:COLORS.oxblood, color:'#fff8e8', fontFamily:"'Fraunces', serif", fontWeight:700, fontSize:'1.05rem' }}>
+          <Crown size={18} /> Begin
+        </button>
+      </div>
+    );
+  }
+  if (phase === 'over') {
+    const correct = answers.filter(a => a.correct).length;
+    const score = Math.round(correct / questions.length * 100);
+    return (
+      <div className="py-8">
+        <div className="text-center mb-8">
+          <div className="text-xs uppercase tracking-[0.25em]" style={{ color:COLORS.oxblood, fontFamily:"'JetBrains Mono', monospace" }}>
+            Final Result
+          </div>
+          <div className="text-8xl sm:text-9xl mt-2" style={{ fontFamily:"'Fraunces', serif", fontWeight:900, color:COLORS.forest, letterSpacing:'-0.05em' }}>
+            {score}<span style={{ color:COLORS.oxblood }}>%</span>
+          </div>
+          <div className="mt-1 text-2xl italic" style={{ fontFamily:"'Fraunces', serif", color:COLORS.oxblood }}>
+            {score >= 90 ? 'Master of letters.' : score >= 75 ? 'Likely 4 or 5.' : score >= 60 ? 'Solid 3 territory.' : 'More reading needed.'}
+          </div>
+          <div className="text-sm mt-1 opacity-70" style={{ fontFamily:"'JetBrains Mono', monospace" }}>
+            {correct} / {questions.length} correct · +{score} XP
+          </div>
+          {score > (stats.bossBest || 0) && (
+            <div className="mt-3 inline-block px-3 py-1.5 text-xs" style={{ backgroundColor:COLORS.gold, color:COLORS.forest, fontFamily:"'JetBrains Mono', monospace", fontWeight:700 }}>
+              ★ NEW HIGH SCORE
+            </div>
+          )}
+        </div>
+        <div className="max-w-3xl mx-auto space-y-3">
+          {answers.map((a, i) => (
+            <div key={i} className="p-4 border-l-4 text-sm"
+              style={{ borderColor:a.correct ? COLORS.forest : COLORS.oxblood, backgroundColor:a.correct ? '#fdfaf0' : '#fff0ec' }}>
+              <div className="flex items-start gap-3">
+                <span className="text-xs mt-0.5" style={{ fontFamily:"'JetBrains Mono', monospace", color:a.correct ? COLORS.forest : COLORS.oxblood }}>
+                  {a.correct ? '✓' : '✕'}
+                </span>
+                <div className="flex-1">
+                  {a.q.passage && (
+                    <div className="italic text-xs mb-1.5 opacity-80" style={{ fontFamily:"'Fraunces', serif" }}>{a.q.passage}</div>
+                  )}
+                  <div style={{ fontFamily:"'Fraunces', serif", fontWeight:600, color:COLORS.forest, whiteSpace:'pre-wrap' }}>{a.q.q}</div>
+                  {!a.correct && (
+                    <div className="mt-1.5 text-xs" style={{ fontFamily:"'Fraunces', serif" }}>
+                      <span style={{ color:COLORS.oxblood }}>Correct: </span>
+                      {a.q.options[a.q.correct]}
+                    </div>
+                  )}
+                  <div className="mt-1.5 italic text-xs opacity-80" style={{ fontFamily:"'Fraunces', serif" }}>{a.q.explain}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="text-center mt-6">
+          <button onClick={start}
+            className="px-6 py-3 inline-flex items-center gap-2"
+            style={{ backgroundColor:COLORS.forest, color:'#fff8e8', fontFamily:"'Fraunces', serif", fontWeight:600 }}>
+            <RotateCcw size={16} /> Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+  const q = questions[idx];
+  const mins = Math.floor(timeLeft / 60);
+  const secs = timeLeft % 60;
+  const lowTime = timeLeft < 60;
+  const correctSoFar = answers.filter(a => a.correct).length;
+  return (
+    <div className="max-w-3xl mx-auto pt-2">
+      <div className="grid grid-cols-3 gap-2 mb-3 text-xs" style={{ fontFamily:"'JetBrains Mono', monospace" }}>
+        <div className="border-2 p-2.5" style={{ borderColor:COLORS.forest }}>
+          <div className="opacity-60 text-[10px] uppercase">Question</div>
+          <div className="text-lg mt-0.5" style={{ fontFamily:"'Fraunces', serif", fontWeight:700 }}>{idx + 1} / {questions.length}</div>
+        </div>
+        <div className="border-2 p-2.5" style={{ borderColor:lowTime ? COLORS.oxblood : COLORS.forest }}>
+          <div className="opacity-60 text-[10px] uppercase">Time</div>
+          <div className="text-lg mt-0.5" style={{ fontFamily:"'Fraunces', serif", fontWeight:700, color:lowTime ? COLORS.oxblood : COLORS.forest }}>
+            {mins}:{secs.toString().padStart(2, '0')}
+          </div>
+        </div>
+        <div className="border-2 p-2.5" style={{ borderColor:COLORS.forest }}>
+          <div className="opacity-60 text-[10px] uppercase">Correct</div>
+          <div className="text-lg mt-0.5" style={{ fontFamily:"'Fraunces', serif", fontWeight:700 }}>{correctSoFar}</div>
+        </div>
+      </div>
+      <div className="h-1 mb-4" style={{ backgroundColor:COLORS.forest + '20' }}>
+        <div className="h-full transition-all" style={{ width:((idx) / questions.length * 100) + '%', backgroundColor:COLORS.oxblood }} />
+      </div>
+      <div className="border-2 p-5 sm:p-7" style={{ borderColor:COLORS.forest, backgroundColor:'#fdfaf0', boxShadow:'5px 5px 0 ' + COLORS.forest }}>
+        <div className="text-[10px] uppercase tracking-[0.2em] mb-3" style={{ color:COLORS.oxblood, fontFamily:"'JetBrains Mono', monospace" }}>
+          {q.kind === 'mcq' ? 'Passage MCQ' : q.kind === 'ident' ? 'Device Identification' : 'Close Reading'}
+        </div>
+        {q.passage && (
+          <div className="border-l-4 pl-4 mb-4 italic" style={{ borderColor:COLORS.gold, fontFamily:"'Fraunces', serif", fontSize:'0.95rem', color:COLORS.forest, lineHeight:1.6 }}>
+            {q.passage}
+          </div>
+        )}
+        <p className="text-base sm:text-lg leading-relaxed whitespace-pre-wrap" style={{ fontFamily:"'Fraunces', serif", fontWeight:600, color:COLORS.forest }}>
+          {q.q}
+        </p>
+        <div className="mt-5 space-y-2.5">
+          {q.options.map((opt, i) => {
+            let border = COLORS.forest + '40', bg = '#fff8e8', color = COLORS.forest;
+            const isSelected = selected === i;
+            const isCorrect = i === q.correct;
+            if (selected !== null && isCorrect) { border = COLORS.forest; bg = '#d8e6c8'; }
+            else if (selected !== null && isSelected && !isCorrect) { border = COLORS.oxblood; bg = '#fdd6d0'; color = COLORS.oxblood; }
+            return (
+              <button key={i} onClick={() => submitAnswer(i)} disabled={selected !== null}
+                className="w-full text-left p-3.5 border-2 transition-all flex gap-3 items-start"
+                style={{ borderColor:border, backgroundColor:bg, color, cursor:selected !== null ? 'default' : 'pointer' }}>
+                <span className="text-xs mt-0.5 opacity-60" style={{ fontFamily:"'JetBrains Mono', monospace" }}>{String.fromCharCode(65 + i)}</span>
+                <span className="flex-1 text-sm" style={{ fontFamily:"'Fraunces', serif" }}>{opt}</span>
+                {selected !== null && isCorrect && <Check size={16} />}
+                {selected !== null && isSelected && !isCorrect && <XIcon size={16} />}
+              </button>
+            );
+          })}
+        </div>
+        {selected !== null && (
+          <div className="mt-4 p-3 border-l-4" style={{ borderColor:COLORS.oxblood, backgroundColor:'#fff0ec55' }}>
+            <p className="text-xs leading-relaxed" style={{ fontFamily:"'Fraunces', serif", color:COLORS.forest }}>{q.explain}</p>
+          </div>
+        )}
+      </div>
+      <div className="mt-4 flex justify-end">
+        <button onClick={advance} disabled={selected === null}
+          className="px-6 py-3 flex items-center gap-2 disabled:opacity-40"
+          style={{ backgroundColor:COLORS.forest, color:'#fff8e8', fontFamily:"'Fraunces', serif", fontWeight:600, cursor:selected === null ? 'not-allowed' : 'pointer' }}>
+          {idx + 1 >= questions.length ? 'Finish' : 'Next'} <ArrowRight size={16} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
